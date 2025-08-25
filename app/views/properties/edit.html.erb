@@ -1,12 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Edit Property</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <%= csrf_meta_tags %>
-  <%= csp_meta_tag %>
-  
-  <style>
+<% content_for :title, "Edit Property" %>
+
+<style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       max-width: 900px;
@@ -156,9 +150,6 @@
       margin-top: 2px;
     }
   </style>
-</head>
-
-<body>
   <div class="container">
     <h1>✏️ Edit Property</h1>
     <p class="subtitle">Update property information and address details</p>
@@ -334,5 +325,3 @@
       });
     });
   </script>
-</body>
-</html>

@@ -1,12 +1,6 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Property Observation Form</title>
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <%= csrf_meta_tags %>
-  <%= csp_meta_tag %>
-  
-  <style>
+<% content_for :title, "Property Observation Form" %>
+
+<style>
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       max-width: 900px;
@@ -149,9 +143,6 @@
       margin-top: 4px;
     }
   </style>
-</head>
-
-<body>
   <div class="container">
     <h1>🏠 Property Observation Form</h1>
     <p class="subtitle">Record detailed observations about property characteristics</p>
@@ -320,5 +311,3 @@
       }
     });
   </script>
-</body>
-</html>
