@@ -10,6 +10,19 @@ A Rails 8 application for managing properties with address validation and geogra
 - Property status tracking (active, inactive, pending, sold)
 - Geographic capabilities with coordinate storage and distance calculations
 
+### Observation System
+- User-customizable observation forms with JSON data storage
+- Flexible data structure for collecting property-specific information
+- Timestamped observations with notes and custom fields
+- Belongs to property relationship for organized data collection
+
+### Address Lookup Interface
+- **Interactive web form** for real-time address validation
+- **OpenStreetMap integration** with live API calls
+- **Responsive design** that works on mobile and desktop devices
+- **AJAX-powered search** with loading states and error handling
+- **Formatted results** displaying validated addresses and coordinates
+
 ### Address Validation System
 The application includes a robust address validation system built with SOLID principles and enterprise design patterns:
 
@@ -61,6 +74,13 @@ rails db:migrate
 rails db:seed
 ```
 
+### Running the application
+```bash
+rails server
+```
+
+Visit `http://localhost:3000` to access the address lookup form.
+
 ### Installation
 ```bash
 bundle install
@@ -78,6 +98,13 @@ The test suite includes:
 - Factory and strategy pattern tests
 
 ## Usage Examples
+
+### Address Lookup Form
+Access the interactive address lookup form at the root URL (`/`):
+- Enter any address in the search field
+- Real-time validation against OpenStreetMap
+- View formatted addresses and coordinates
+- Mobile-friendly responsive interface
 
 ### Creating a Property
 ```ruby
@@ -123,6 +150,29 @@ sf_properties = Property.in_city("San Francisco")
 active_residential_in_sf = Property.active.by_type("residential").in_city("San Francisco")
 ```
 
+### Working with Observations
+```ruby
+# Create a customizable observation
+observation = property.observations.create!(
+  observations: {
+    "temperature" => 72.5,
+    "humidity" => 45,
+    "condition" => "excellent",
+    "inspector" => "John Doe"
+  },
+  notes: "Regular maintenance inspection",
+  recorded_at: Time.current
+)
+
+# Access custom field values
+temperature = observation.custom_field_value("temperature")
+observation.set_custom_field("pressure", 1013.25)
+
+# Query observations
+recent_observations = property.observations.recent
+environmental_checks = Observation.recorded_between(1.week.ago, Time.current)
+```
+
 ## Architecture
 
 The address validation system follows enterprise patterns:
@@ -144,6 +194,20 @@ This architecture makes the system:
 - **Address Validation**: OpenStreetMap Nominatim API integration
 - **Geocoding**: Automatic coordinate extraction and storage
 - **Geographic Search**: PostGIS-ready coordinate indexing
+- **Address Lookup Web Interface**: Interactive form for real-time address validation
+
+## Models
+
+### Property
+- Core property management with address validation
+- Geographic capabilities and distance calculations
+- Relationship with observations for data collection
+
+### Observation
+- Flexible JSON-based data storage for custom forms
+- Property relationship for organized data collection
+- Timestamped entries with notes and custom fields
+- Scopes for querying by date ranges and types
 
 ## Testing
 
