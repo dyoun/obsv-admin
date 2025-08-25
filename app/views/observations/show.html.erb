@@ -205,6 +205,58 @@
     .mitigation-assessments {
       margin-top: 15px;
     }
+    
+    .collapse-toggle {
+      background: #6c757d;
+      color: white;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-left: 10px;
+    }
+    
+    .collapse-toggle:hover {
+      background: #545b62;
+    }
+    
+    .assessment-summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 15px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .assessment-summary:hover {
+      opacity: 0.9;
+    }
+    
+    .assessment-details {
+      display: block;
+      padding: 0 15px 15px;
+    }
+    
+    .assessment-details.collapsed {
+      display: none;
+    }
+    
+    .expand-icon {
+      transition: transform 0.2s;
+      font-size: 14px;
+    }
+    
+    .expand-icon.rotated {
+      transform: rotate(90deg);
+    }
   </style>
 </head>
 
@@ -313,7 +365,13 @@
       
       <% if @observation.mitigations.any? %>
         <div class="mitigation-assessments">
-          <h4 style="margin: 0 0 15px 0; color: #333; font-size: 14px;">🔥 Fire Mitigation Assessments (<%= @observation.mitigations.count %>)</h4>
+          <div style="display: flex; align-items: center; margin-bottom: 15px;">
+            <h4 style="margin: 0; color: #333; font-size: 14px;">🔥 Fire Mitigation Assessments (<%= @observation.mitigations.count %>)</h4>
+            <button class="collapse-toggle" onclick="toggleAllAssessments()">
+              <span id="toggle-text">Collapse All</span>
+            </button>
+          </div>
+          
           <% @observation.mitigations.recent.each_with_index do |mitigation, index| %>
             <% 
               # Determine risk level based on safe_distance_calc
@@ -336,12 +394,12 @@
                 text_color = '#721c24'     # Dark red text
               end
             %>
-            <div class="mitigation-card" style="margin-bottom: 20px; padding: 15px; background: <%= bg_color %>; border-radius: 6px; border-left: 4px solid <%= border_color %>;">
+            <div class="mitigation-card" style="margin-bottom: 15px; background: <%= bg_color %>; border-radius: 6px; border-left: 4px solid <%= border_color %>;">
               
-              <!-- Header -->
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <!-- Summary Header (always visible) -->
+              <div class="assessment-summary" style="background: <%= bg_color %>; color: <%= text_color %>;" onclick="toggleAssessment(<%= index %>)">
                 <div>
-                  <strong style="color: <%= text_color %>;">
+                  <strong>
                     <%= is_high_risk ? '🔥' : (mitigation.success? ? '✅' : '❌') %> Assessment #<%= mitigation.id %>
                     <% if is_high_risk && mitigation.success? %>
                       <span style="color: #dc3545; font-size: 11px;">(HIGH RISK)</span>
@@ -350,80 +408,84 @@
                   <span style="margin-left: 10px; font-size: 11px; color: #666;">
                     <%= mitigation.submitted_at.strftime("%b %d, %Y at %l:%M %p") %>
                   </span>
+                  <span class="badge <%= is_high_risk ? 'badge-no' : (mitigation.success? ? 'badge-yes' : 'badge-no') %>" style="font-size: 10px; margin-left: 10px;">
+                    <%= is_high_risk && mitigation.success? ? 'HIGH RISK' : mitigation.status.upcase %>
+                  </span>
                 </div>
-                <span class="badge <%= is_high_risk ? 'badge-no' : (mitigation.success? ? 'badge-yes' : 'badge-no') %>" style="font-size: 10px;">
-                  <%= is_high_risk && mitigation.success? ? 'HIGH RISK' : mitigation.status.upcase %>
-                </span>
+                <span class="expand-icon rotated" id="icon-<%= index %>">▼</span>
               </div>
 
-              <!-- Request Info -->
-              <div style="font-size: 12px; margin-bottom: 10px; color: #666;">
-                <strong>Request ID:</strong> <%= mitigation.request_id %>
-                <% if mitigation.performance_time %>
-                  | <strong>Performance:</strong> <%= mitigation.performance_time %>
-                <% end %>
-              </div>
-
-              <% if mitigation.success? && mitigation.response_data.dig('data', 'result') %>
-                <% result = mitigation.response_data.dig('data', 'result') %>
-                
-                <!-- Risk Assessment -->
-                <div style="margin-bottom: 12px;">
-                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; font-size: 12px;">
-                    <% if result['safe_distance_calc'] %>
-                      <div style="<%= result['safe_distance_calc'].to_i > 0 ? 'color: #dc3545; font-weight: bold;' : '' %>">
-                        <strong>Calc Distance:</strong> <%= result['safe_distance_calc'] %>ft
-                        <% if result['safe_distance_calc'].to_i > 0 %>
-                          <span style="color: #dc3545;">⚠️</span>
-                        <% end %>
-                      </div>
-                    <% end %>
-                    <% if result['distance'] %>
-                      <div><strong>Current Distance:</strong> <%= result['distance'] %>ft</div>
-                    <% end %>
-                    <% if result['safe_distance_diff'] %>
-                      <div><strong>Difference:</strong> <%= result['safe_distance_diff'] %>ft</div>
-                    <% end %>
-                    <% if result['risk_type'] %>
-                      <div><strong>Risk Type:</strong> <%= result['risk_type'].titleize %></div>
-                    <% end %>
-                    <% if result['window_type'] %>
-                      <div><strong>Window:</strong> <%= result['window_type'].titleize %></div>
-                    <% end %>
-                    <% if result['vegetation_type'] %>
-                      <div><strong>Vegetation:</strong> <%= result['vegetation_type'].titleize %></div>
-                    <% end %>
-                  </div>
+              <!-- Detailed Content (collapsible) -->
+              <div class="assessment-details" id="details-<%= index %>">
+                <!-- Request Info -->
+                <div style="font-size: 12px; margin-bottom: 10px; color: #666;">
+                  <strong>Request ID:</strong> <%= mitigation.request_id %>
+                  <% if mitigation.performance_time %>
+                    | <strong>Performance:</strong> <%= mitigation.performance_time %>
+                  <% end %>
                 </div>
 
-                <!-- Mitigation Recommendations -->
-                <% if result['mitigations'] %>
-                  <div style="margin-top: 12px;">
-                    <strong style="font-size: 13px; color: #333;">🛡️ Recommendations:</strong>
-                    <% result['mitigations'].each do |category, recommendations| %>
-                      <div style="margin: 8px 0;">
-                        <strong style="font-size: 12px; color: #555;"><%= category.titleize %> Solutions:</strong>
-                        <ul style="margin: 4px 0 0 20px; padding: 0; font-size: 11px;">
-                          <% recommendations.each do |rec| %>
-                            <li style="margin-bottom: 2px;"><%= rec %></li>
+                <% if mitigation.success? && mitigation.response_data.dig('data', 'result') %>
+                  <% result = mitigation.response_data.dig('data', 'result') %>
+                  
+                  <!-- Risk Assessment -->
+                  <div style="margin-bottom: 12px;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; font-size: 12px;">
+                      <% if result['safe_distance_calc'] %>
+                        <div style="<%= result['safe_distance_calc'].to_i > 0 ? 'color: #dc3545; font-weight: bold;' : '' %>">
+                          <strong>Calc Distance:</strong> <%= result['safe_distance_calc'] %>ft
+                          <% if result['safe_distance_calc'].to_i > 0 %>
+                            <span style="color: #dc3545;">⚠️</span>
                           <% end %>
-                        </ul>
-                      </div>
-                    <% end %>
+                        </div>
+                      <% end %>
+                      <% if result['distance'] %>
+                        <div><strong>Current Distance:</strong> <%= result['distance'] %>ft</div>
+                      <% end %>
+                      <% if result['safe_distance_diff'] %>
+                        <div><strong>Difference:</strong> <%= result['safe_distance_diff'] %>ft</div>
+                      <% end %>
+                      <% if result['risk_type'] %>
+                        <div><strong>Risk Type:</strong> <%= result['risk_type'].titleize %></div>
+                      <% end %>
+                      <% if result['window_type'] %>
+                        <div><strong>Window:</strong> <%= result['window_type'].titleize %></div>
+                      <% end %>
+                      <% if result['vegetation_type'] %>
+                        <div><strong>Vegetation:</strong> <%= result['vegetation_type'].titleize %></div>
+                      <% end %>
+                    </div>
+                  </div>
+
+                  <!-- Mitigation Recommendations -->
+                  <% if result['mitigations'] %>
+                    <div style="margin-top: 12px;">
+                      <strong style="font-size: 13px; color: #333;">🛡️ Recommendations:</strong>
+                      <% result['mitigations'].each do |category, recommendations| %>
+                        <div style="margin: 8px 0;">
+                          <strong style="font-size: 12px; color: #555;"><%= category.titleize %> Solutions:</strong>
+                          <ul style="margin: 4px 0 0 20px; padding: 0; font-size: 11px;">
+                            <% recommendations.each do |rec| %>
+                              <li style="margin-bottom: 2px;"><%= rec %></li>
+                            <% end %>
+                          </ul>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% end %>
+                <% else %>
+                  <!-- Failed Assessment -->
+                  <div style="color: #721c24; font-size: 12px;">
+                    <strong>Message:</strong> <%= mitigation.response_data['message'] || 'Assessment failed' %>
                   </div>
                 <% end %>
-              <% else %>
-                <!-- Failed Assessment -->
-                <div style="color: #721c24; font-size: 12px;">
-                  <strong>Message:</strong> <%= mitigation.response_data['message'] || 'Assessment failed' %>
-                </div>
-              <% end %>
 
-              <!-- Metadata (collapsible) -->
-              <details style="margin-top: 10px;">
-                <summary style="font-size: 11px; color: #666; cursor: pointer;">Show Raw Data</summary>
-                <pre style="font-size: 10px; background: #f8f9fa; padding: 8px; border-radius: 3px; margin-top: 5px; overflow-x: auto;"><%= JSON.pretty_generate(mitigation.response_data) %></pre>
-              </details>
+                <!-- Metadata (collapsible) -->
+                <details style="margin-top: 10px;">
+                  <summary style="font-size: 11px; color: #666; cursor: pointer;">Show Raw Data</summary>
+                  <pre style="font-size: 10px; background: #f8f9fa; padding: 8px; border-radius: 3px; margin-top: 5px; overflow-x: auto;"><%= JSON.pretty_generate(mitigation.response_data) %></pre>
+                </details>
+              </div>
             </div>
           <% end %>
         </div>
@@ -442,5 +504,72 @@
       </div>
     </div>
   </div>
+
+  <script>
+    let allExpanded = true;
+    
+    function toggleAssessment(index) {
+      const details = document.getElementById(`details-${index}`);
+      const icon = document.getElementById(`icon-${index}`);
+      
+      if (details.classList.contains('collapsed')) {
+        details.classList.remove('collapsed');
+        icon.classList.add('rotated');
+        icon.textContent = '▼';
+      } else {
+        details.classList.add('collapsed');
+        icon.classList.remove('rotated');
+        icon.textContent = '▶';
+      }
+      
+      updateToggleAllButton();
+    }
+    
+    function toggleAllAssessments() {
+      const allDetails = document.querySelectorAll('.assessment-details');
+      const allIcons = document.querySelectorAll('.expand-icon');
+      const toggleText = document.getElementById('toggle-text');
+      
+      allExpanded = !allExpanded;
+      
+      allDetails.forEach((details, index) => {
+        const icon = allIcons[index];
+        
+        if (allExpanded) {
+          details.classList.remove('collapsed');
+          icon.classList.add('rotated');
+          icon.textContent = '▼';
+        } else {
+          details.classList.add('collapsed');
+          icon.classList.remove('rotated');
+          icon.textContent = '▶';
+        }
+      });
+      
+      toggleText.textContent = allExpanded ? 'Collapse All' : 'Expand All';
+    }
+    
+    function updateToggleAllButton() {
+      const allDetails = document.querySelectorAll('.assessment-details');
+      const collapsedCount = document.querySelectorAll('.assessment-details.collapsed').length;
+      const toggleText = document.getElementById('toggle-text');
+      
+      if (collapsedCount === allDetails.length) {
+        allExpanded = false;
+        toggleText.textContent = 'Expand All';
+      } else if (collapsedCount === 0) {
+        allExpanded = true;
+        toggleText.textContent = 'Collapse All';
+      } else {
+        allExpanded = true;
+        toggleText.textContent = 'Collapse All';
+      }
+    }
+    
+    // Initialize the toggle button state on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      updateToggleAllButton();
+    });
+  </script>
 </body>
 </html>

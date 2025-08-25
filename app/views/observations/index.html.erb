@@ -350,6 +350,58 @@
     .close-result:hover {
       color: #333;
     }
+    
+    .collapse-toggle-mini {
+      background: #6c757d;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 3px;
+      font-size: 9px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-left: 8px;
+    }
+    
+    .collapse-toggle-mini:hover {
+      background: #545b62;
+    }
+    
+    .assessment-summary-mini {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      margin-bottom: 8px;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .assessment-summary-mini:hover {
+      opacity: 0.9;
+    }
+    
+    .assessment-details-mini {
+      display: none;
+      padding: 0 12px 12px;
+    }
+    
+    .assessment-details-mini.expanded {
+      display: block;
+    }
+    
+    .expand-icon-mini {
+      transition: transform 0.2s;
+      font-size: 12px;
+    }
+    
+    .expand-icon-mini.rotated {
+      transform: rotate(90deg);
+    }
   </style>
 </head>
 
@@ -522,7 +574,12 @@
             
             <% if observation.mitigations.any? %>
               <div class="mitigation-assessments" style="margin-top: 15px;">
-                <h4 style="margin: 0 0 15px 0; color: #333; font-size: 14px;">🔥 Fire Mitigation Assessments (<%= observation.mitigations.count %>)</h4>
+                <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                  <h4 style="margin: 0; color: #333; font-size: 14px;">🔥 Fire Mitigation Assessments (<%= observation.mitigations.count %>)</h4>
+                  <button class="collapse-toggle-mini" onclick="toggleAllAssessmentsForObservation(<%= observation.id %>)">
+                    <span id="toggle-text-<%= observation.id %>">Expand</span>
+                  </button>
+                </div>
                 <% observation.mitigations.recent.each_with_index do |mitigation, index| %>
                   <% 
                     # Determine risk level based on safe_distance_calc
@@ -545,33 +602,36 @@
                       text_color = '#721c24'     # Dark red text
                     end
                   %>
-                  <div class="mitigation-card" style="margin-bottom: 20px; padding: 15px; background: <%= bg_color %>; border-radius: 6px; border-left: 4px solid <%= border_color %>;">
+                  <div class="mitigation-card" style="margin-bottom: 15px; background: <%= bg_color %>; border-radius: 6px; border-left: 4px solid <%= border_color %>;">
                     
-                    <!-- Header -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <!-- Summary Header (always visible) -->
+                    <div class="assessment-summary-mini" style="background: <%= bg_color %>; color: <%= text_color %>;" onclick="toggleAssessmentInIndex(<%= observation.id %>, <%= index %>)">
                       <div>
-                        <strong style="color: <%= text_color %>;">
+                        <strong>
                           <%= is_high_risk ? '🔥' : (mitigation.success? ? '✅' : '❌') %> Assessment #<%= mitigation.id %>
                           <% if is_high_risk && mitigation.success? %>
-                            <span style="color: #dc3545; font-size: 11px;">(HIGH RISK)</span>
+                            <span style="color: #dc3545; font-size: 10px;">(HIGH RISK)</span>
                           <% end %>
                         </strong>
-                        <span style="margin-left: 10px; font-size: 11px; color: #666;">
-                          <%= mitigation.submitted_at.strftime("%b %d, %Y at %l:%M %p") %>
+                        <span style="margin-left: 8px; font-size: 10px; color: #666;">
+                          <%= mitigation.submitted_at.strftime("%b %d, %l:%M %p") %>
+                        </span>
+                        <span class="badge <%= is_high_risk ? 'badge-no' : (mitigation.success? ? 'badge-yes' : 'badge-no') %>" style="font-size: 8px; margin-left: 8px;">
+                          <%= is_high_risk && mitigation.success? ? 'HIGH RISK' : mitigation.status.upcase %>
                         </span>
                       </div>
-                      <span class="badge <%= is_high_risk ? 'badge-no' : (mitigation.success? ? 'badge-yes' : 'badge-no') %>" style="font-size: 10px;">
-                        <%= is_high_risk && mitigation.success? ? 'HIGH RISK' : mitigation.status.upcase %>
-                      </span>
+                      <span class="expand-icon-mini" id="icon-<%= observation.id %>-<%= index %>">▶</span>
                     </div>
 
-                    <!-- Request Info -->
-                    <div style="font-size: 12px; margin-bottom: 10px; color: #666;">
-                      <strong>Request ID:</strong> <%= mitigation.request_id %>
-                      <% if mitigation.performance_time %>
-                        | <strong>Performance:</strong> <%= mitigation.performance_time %>
-                      <% end %>
-                    </div>
+                    <!-- Detailed Content (collapsible) -->
+                    <div class="assessment-details-mini" id="details-<%= observation.id %>-<%= index %>">
+                      <!-- Request Info -->
+                      <div style="font-size: 12px; margin-bottom: 10px; color: #666;">
+                        <strong>Request ID:</strong> <%= mitigation.request_id %>
+                        <% if mitigation.performance_time %>
+                          | <strong>Performance:</strong> <%= mitigation.performance_time %>
+                        <% end %>
+                      </div>
 
                     <% if mitigation.success? && mitigation.response_data.dig('data', 'result') %>
                       <% result = mitigation.response_data.dig('data', 'result') %>
@@ -634,11 +694,12 @@
                       </div>
                     <% end %>
 
-                    <!-- Metadata (collapsible) -->
-                    <details style="margin-top: 10px;">
-                      <summary style="font-size: 11px; color: #666; cursor: pointer;">Show Raw Data</summary>
-                      <pre style="font-size: 10px; background: #f8f9fa; padding: 8px; border-radius: 3px; margin-top: 5px; overflow-x: auto;"><%= JSON.pretty_generate(mitigation.response_data) %></pre>
-                    </details>
+                      <!-- Metadata (collapsible) -->
+                      <details style="margin-top: 10px;">
+                        <summary style="font-size: 11px; color: #666; cursor: pointer;">Show Raw Data</summary>
+                        <pre style="font-size: 10px; background: #f8f9fa; padding: 8px; border-radius: 3px; margin-top: 5px; overflow-x: auto;"><%= JSON.pretty_generate(mitigation.response_data) %></pre>
+                      </details>
+                    </div>
                   </div>
                 <% end %>
               </div>
@@ -670,5 +731,82 @@
       </div>
     <% end %>
   </div>
+
+  <script>
+    const observationStates = {};
+    
+    function toggleAssessmentInIndex(observationId, index) {
+      const details = document.getElementById(`details-${observationId}-${index}`);
+      const icon = document.getElementById(`icon-${observationId}-${index}`);
+      
+      if (details.classList.contains('expanded')) {
+        details.classList.remove('expanded');
+        icon.classList.remove('rotated');
+        icon.textContent = '▶';
+      } else {
+        details.classList.add('expanded');
+        icon.classList.add('rotated');
+        icon.textContent = '▼';
+      }
+      
+      updateToggleButtonForObservation(observationId);
+    }
+    
+    function toggleAllAssessmentsForObservation(observationId) {
+      const allDetails = document.querySelectorAll(`[id^="details-${observationId}-"]`);
+      const allIcons = document.querySelectorAll(`[id^="icon-${observationId}-"]`);
+      const toggleText = document.getElementById(`toggle-text-${observationId}`);
+      
+      // Initialize state if not exists
+      if (!observationStates[observationId]) {
+        observationStates[observationId] = false;
+      }
+      
+      observationStates[observationId] = !observationStates[observationId];
+      
+      allDetails.forEach((details, index) => {
+        const icon = allIcons[index];
+        
+        if (observationStates[observationId]) {
+          details.classList.add('expanded');
+          icon.classList.add('rotated');
+          icon.textContent = '▼';
+        } else {
+          details.classList.remove('expanded');
+          icon.classList.remove('rotated');
+          icon.textContent = '▶';
+        }
+      });
+      
+      toggleText.textContent = observationStates[observationId] ? 'Collapse' : 'Expand';
+    }
+    
+    function updateToggleButtonForObservation(observationId) {
+      const allDetails = document.querySelectorAll(`[id^="details-${observationId}-"]`);
+      const expandedCount = document.querySelectorAll(`[id^="details-${observationId}-"].expanded`).length;
+      const toggleText = document.getElementById(`toggle-text-${observationId}`);
+      
+      if (expandedCount === 0) {
+        observationStates[observationId] = false;
+        toggleText.textContent = 'Expand';
+      } else if (expandedCount === allDetails.length) {
+        observationStates[observationId] = true;
+        toggleText.textContent = 'Collapse';
+      } else {
+        observationStates[observationId] = false;
+        toggleText.textContent = 'Expand';
+      }
+    }
+    
+    // Initialize all toggle button states on page load
+    document.addEventListener('DOMContentLoaded', function() {
+      // Find all observation IDs and initialize their toggle buttons
+      const toggleButtons = document.querySelectorAll('[id^="toggle-text-"]');
+      toggleButtons.forEach(button => {
+        const observationId = button.id.replace('toggle-text-', '');
+        updateToggleButtonForObservation(observationId);
+      });
+    });
+  </script>
 </body>
 </html>
