@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Edit Property</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f8f9fa;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+    
+    .property-info {
+      background: #e3f2fd;
+      border: 1px solid #bbdefb;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 30px;
+    }
+    
+    .property-info strong {
+      color: #1565c0;
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #555;
+    }
+    
+    .required {
+      color: #dc3545;
+    }
+    
+    select, input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+    
+    select:focus, input[type="text"]:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+    }
+    
+    .btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      width: 100%;
+      margin-top: 20px;
+    }
+    
+    .btn:hover {
+      background: #218838;
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      margin-right: 15px;
+      width: auto;
+      display: inline-block;
+      text-decoration: none;
+      text-align: center;
+    }
+    
+    .btn-secondary:hover {
+      background: #545b62;
+      color: white;
+    }
+    
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 30px;
+    }
+    
+    .alert {
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    
+    .alert-success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+    }
+    
+    .alert-error {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+    }
+    
+    .help-text {
+      font-size: 14px;
+      color: #666;
+      margin-top: 4px;
+    }
+    
+    .current-value {
+      font-size: 12px;
+      color: #666;
+      font-style: italic;
+      margin-top: 2px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>✏️ Edit Property</h1>
+    <p class="subtitle">Update property information and address details</p>
+    
+    <div class="property-info">
+      <strong>Current Address:</strong> 
+      <%= @property.normalized_address || [@property.street_address, @property.city, @property.state_province, @property.country].compact.reject(&:blank?).join(', ') %>
+      <br>
+      <strong>Created:</strong> <%= @property.created_at.strftime('%B %d, %Y at %I:%M %p') %>
+    </div>
+    
+    <% if notice %>
+      <div class="alert alert-success"><%= notice %></div>
+    <% end %>
+    
+    <% if @property.errors.any? %>
+      <div class="alert alert-error">
+        <strong>Please fix the following errors:</strong>
+        <ul style="margin: 10px 0 0 20px;">
+          <% @property.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with model: @property, local: true do |form| %>
+      <div class="form-grid">
+        <!-- Property Name -->
+        <div class="form-group">
+          <%= form.label :name, class: "form-label" do %>
+            Property Name <span class="required">*</span>
+          <% end %>
+          <%= form.text_field :name, class: 'form-control', required: true, 
+              placeholder: 'e.g., Smith Family Home' %>
+          <div class="help-text">Descriptive name for this property</div>
+        </div>
+
+        <!-- Property Type -->
+        <div class="form-group">
+          <%= form.label :property_type, class: "form-label" do %>
+            Property Type <span class="required">*</span>
+          <% end %>
+          <%= form.select :property_type, 
+              options_for_select([
+                ['Residential', 'residential'],
+                ['Commercial', 'commercial'],
+                ['Industrial', 'industrial'],
+                ['Mixed Use', 'mixed_use'],
+                ['Land', 'land']
+              ], @property.property_type), 
+              { prompt: 'Select property type...' },
+              { class: 'form-control', required: true } %>
+          <div class="help-text">Classification of property usage</div>
+        </div>
+
+        <!-- Status -->
+        <div class="form-group">
+          <%= form.label :status, class: "form-label" do %>
+            Status <span class="required">*</span>
+          <% end %>
+          <%= form.select :status, 
+              options_for_select([
+                ['Active', 'active'],
+                ['Inactive', 'inactive'],
+                ['Pending', 'pending'],
+                ['Sold', 'sold']
+              ], @property.status), 
+              { prompt: 'Select status...' },
+              { class: 'form-control', required: true } %>
+          <div class="help-text">Current property status</div>
+        </div>
+
+        <!-- Street Address -->
+        <div class="form-group">
+          <%= form.label :street_address, class: "form-label" do %>
+            Street Address <span class="required">*</span>
+          <% end %>
+          <%= form.text_field :street_address, class: 'form-control', required: true, 
+              placeholder: 'e.g., 123 Main Street' %>
+          <div class="help-text">Full street address (minimum 5 characters)</div>
+        </div>
+
+        <!-- City -->
+        <div class="form-group">
+          <%= form.label :city, class: "form-label" do %>
+            City <span class="required">*</span>
+          <% end %>
+          <%= form.text_field :city, class: 'form-control', required: true, 
+              placeholder: 'e.g., San Francisco' %>
+          <div class="help-text">City name (minimum 2 characters)</div>
+        </div>
+
+        <!-- State/Province -->
+        <div class="form-group">
+          <%= form.label :state_province, 'State/Province', class: "form-label" %>
+          <%= form.text_field :state_province, class: 'form-control', 
+              placeholder: 'e.g., CA or California' %>
+          <div class="help-text">State, province, or region (optional)</div>
+        </div>
+
+        <!-- Postal Code -->
+        <div class="form-group">
+          <%= form.label :postal_code, 'Postal Code', class: "form-label" %>
+          <%= form.text_field :postal_code, class: 'form-control', 
+              placeholder: 'e.g., 94102' %>
+          <div class="help-text">ZIP code or postal code (optional)</div>
+        </div>
+
+        <!-- Country -->
+        <div class="form-group">
+          <%= form.label :country, class: "form-label" do %>
+            Country <span class="required">*</span>
+          <% end %>
+          <%= form.text_field :country, class: 'form-control', required: true, 
+              placeholder: 'e.g., US' %>
+          <div class="help-text">Country code (2-3 characters, e.g., US, CA, GB)</div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <%= link_to 'Cancel', properties_path, class: 'btn btn-secondary' %>
+        <%= form.submit 'Update Property', class: 'btn' %>
+      </div>
+    <% end %>
+  </div>
+
+  <script>
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+      const requiredFields = document.querySelectorAll('[required]');
+      let isValid = true;
+      
+      requiredFields.forEach(field => {
+        if (!field.value.trim()) {
+          isValid = false;
+          field.style.borderColor = '#dc3545';
+        } else {
+          field.style.borderColor = '#ddd';
+        }
+      });
+      
+      // Validate minimum lengths
+      const streetAddress = document.getElementById('property_street_address');
+      const city = document.getElementById('property_city');
+      const country = document.getElementById('property_country');
+      
+      if (streetAddress.value.trim().length < 5) {
+        isValid = false;
+        streetAddress.style.borderColor = '#dc3545';
+      }
+      
+      if (city.value.trim().length < 2) {
+        isValid = false;
+        city.style.borderColor = '#dc3545';
+      }
+      
+      if (country.value.trim().length < 2) {
+        isValid = false;
+        country.style.borderColor = '#dc3545';
+      }
+      
+      if (!isValid) {
+        e.preventDefault();
+        alert('Please fill in all required fields with valid values.');
+      }
+    });
+    
+    // Reset border colors on input
+    document.querySelectorAll('input, select').forEach(field => {
+      field.addEventListener('input', function() {
+        this.style.borderColor = '#ddd';
+      });
+    });
+  </script>
+</body>
+</html>

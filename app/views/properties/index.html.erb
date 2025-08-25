@@ -312,8 +312,27 @@
               <% end %>
             </div>
             
+            <div class="property-actions" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+              <div>
+                <%= link_to '✏️ Edit Property', edit_property_path(property), 
+                    class: 'btn', 
+                    style: 'font-size: 12px; padding: 6px 12px; background: #6c757d;' %>
+              </div>
+              <div style="text-align: right;">
+                <% if property.observations.any? %>
+                  <span style="color: #28a745; font-weight: 600; font-size: 14px;">
+                    📋 <%= pluralize(property.observations.count, 'Observation') %>
+                  </span>
+                <% else %>
+                  <span style="color: #666; font-size: 14px;">
+                    📝 No Observations Yet
+                  </span>
+                <% end %>
+              </div>
+            </div>
+            
             <div class="observations-info <%= property.observations.any? ? 'has-observations' : '' %>">
-              <div class="observations-count">
+              <div class="observations-count" style="display: none;">
                 <% if property.observations.any? %>
                   📋 <%= pluralize(property.observations.count, 'Observation') %>
                 <% else %>
