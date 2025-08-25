@@ -1,0 +1,139 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+      <div class="flex justify-between items-start mb-6">
+        <h1 class="text-3xl font-bold text-gray-800">Observation Details</h1>
+        <%= link_to observations_path, class: "bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded transition duration-200" do %>
+          ← Back to All Observations
+        <% end %>
+      </div>
+
+      <!-- Property Information -->
+      <div class="bg-gray-50 rounded-lg p-4 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-3">Property Information</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <p class="text-gray-600"><strong>Name:</strong> <%= @observation.property.name %></p>
+            <p class="text-gray-600"><strong>Address:</strong> <%= @observation.property.street_address %></p>
+            <p class="text-gray-600"><strong>City:</strong> <%= @observation.property.city %></p>
+          </div>
+          <div>
+            <p class="text-gray-600"><strong>State/Province:</strong> <%= @observation.property.state_province %></p>
+            <p class="text-gray-600"><strong>Country:</strong> <%= @observation.property.country %></p>
+            <p class="text-gray-600"><strong>Type:</strong> <%= @observation.property.property_type.capitalize %></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Observation Data -->
+      <div class="bg-gray-50 rounded-lg p-4 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-3">Observation Data</h2>
+        <p class="text-gray-600 mb-3"><strong>Recorded At:</strong> <%= @observation.recorded_at.strftime('%B %d, %Y at %I:%M %p') %></p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <% @observation.observations&.each do |key, value| %>
+            <div class="bg-white p-3 rounded border">
+              <p class="font-medium text-gray-700"><%= key.humanize %>:</p>
+              <p class="text-gray-600"><%= value %></p>
+            </div>
+          <% end %>
+        </div>
+      </div>
+
+      <!-- Fire Mitigation Actions -->
+      <div class="bg-gray-50 rounded-lg p-4 mb-6">
+        <h2 class="text-xl font-semibold text-gray-800 mb-3">Fire Mitigation Assessment</h2>
+        
+        <% if @observation.mitigations.any? %>
+          <p class="text-green-600 mb-3">✅ Fire mitigation assessments have been performed for this observation.</p>
+        <% else %>
+          <p class="text-gray-600 mb-3">No fire mitigation assessments have been performed yet.</p>
+        <% end %>
+        
+        <%= button_to submit_to_fire_mitigation_observation_path(@observation), 
+            method: :post, 
+            class: "bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded transition duration-200",
+            confirm: "Submit this observation for fire mitigation assessment?" do %>
+          🔥 Submit for Fire Mitigation Assessment
+        <% end %>
+      </div>
+
+      <!-- Mitigation Results -->
+      <% @observation.mitigations.recent.each do |mitigation| %>
+        <% 
+          safe_distance_calc = mitigation.response_data.dig('data', 'result', 'safe_distance_calc').to_i
+          is_high_risk = safe_distance_calc > 0
+          bg_color = is_high_risk ? '#f8d7da' : '#d4edda'
+          text_color = is_high_risk ? '#721c24' : '#155724'
+          border_color = is_high_risk ? '#f5c6cb' : '#c3e6cb'
+        %>
+        
+        <div class="rounded-lg p-4 mb-4 border-l-4" style="background-color: <%= bg_color %>; color: <%= text_color %>; border-left-color: <%= border_color %>;">
+          <div class="flex items-center justify-between mb-3">
+            <h3 class="text-lg font-semibold">
+              <%= is_high_risk ? '🔥' : '✅' %> Fire Mitigation Assessment
+              <span class="text-sm font-normal">
+                (<%= mitigation.submitted_at.strftime('%B %d, %Y at %I:%M %p') %>)
+              </span>
+            </h3>
+            <span class="px-2 py-1 rounded text-xs font-semibold <%= mitigation.success? ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' %>">
+              <%= mitigation.status.upcase %>
+            </span>
+          </div>
+          
+          <% if mitigation.success? && mitigation.response_data.dig('data', 'result') %>
+            <% result = mitigation.response_data.dig('data', 'result') %>
+            
+            <!-- Risk Assessment -->
+            <div class="mb-4">
+              <h4 class="font-semibold mb-2">Risk Assessment:</h4>
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <p><strong>Safe Distance:</strong> <%= result['safe_distance'] %> feet</p>
+                  <p><strong>Calculated Distance:</strong> <%= result['safe_distance_calc'] %> feet</p>
+                </div>
+                <div>
+                  <p><strong>Fire Risk Level:</strong> <%= result['fire_risk_level'] %></p>
+                  <p><strong>Structure Risk:</strong> <%= result['structure_risk'] %></p>
+                </div>
+                <div>
+                  <p><strong>Overall Score:</strong> <%= result['overall_risk_score'] %>/100</p>
+                  <% if is_high_risk %>
+                    <p class="font-semibold">⚠️ High Risk Property</p>
+                  <% else %>
+                    <p class="font-semibold">✅ Low Risk Property</p>
+                  <% end %>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Mitigation Recommendations -->
+            <% if result['mitigations']&.any? %>
+              <div class="mb-4">
+                <h4 class="font-semibold mb-2">Recommended Mitigations:</h4>
+                <ul class="list-disc list-inside space-y-1">
+                  <% result['mitigations'].each do |rec| %>
+                    <li><%= rec %></li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+          <% else %>
+            <!-- Error Display -->
+            <div class="bg-red-50 border border-red-200 rounded p-3">
+              <p class="text-red-800"><strong>Error:</strong> <%= mitigation.response_data['message'] %></p>
+            </div>
+          <% end %>
+          
+          <!-- Performance Info -->
+          <% if mitigation.performance_time %>
+            <div class="text-sm opacity-75 mt-3">
+              <p><strong>Processing Time:</strong> <%= mitigation.performance_time %> seconds</p>
+              <p><strong>Request ID:</strong> <%= mitigation.request_id %></p>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</div>

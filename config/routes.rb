@@ -1,5 +1,5 @@
 Rails.application.routes.draw do
-  resources :observations, only: [:index, :new, :create] do
+  resources :observations, only: [:index, :show, :new, :create] do
     member do
       post :submit_to_fire_mitigation
     end

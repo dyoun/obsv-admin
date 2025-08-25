@@ -9,6 +9,10 @@ class ObservationsController < ApplicationController
     @latest_mitigation_id = session.delete(:latest_mitigation_id)
   end
 
+  def show
+    @observation = Observation.includes(:property, :mitigations).find(params[:id])
+  end
+
   def new
     @observation = Observation.new
     @property = find_or_create_property
@@ -20,7 +24,7 @@ class ObservationsController < ApplicationController
     @observation.recorded_at = Time.current
 
     if @observation.save
-      redirect_to new_observation_path, notice: 'Observation recorded successfully!'
+      redirect_to observation_path(@observation), notice: 'Observation recorded successfully!'
     else
       render :new, status: :unprocessable_entity
     end

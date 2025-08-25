@@ -160,6 +160,13 @@
       <div class="address-info">
         <strong>Property Address:</strong> <%= params[:normalized_address] %>
       </div>
+    <% elsif @property&.persisted? %>
+      <div class="address-info">
+        <strong>Property Address:</strong> 
+        <%= [@property.street_address, @property.city, @property.state_province, @property.country].compact.reject(&:blank?).join(', ') %>
+        <br>
+        <strong>Property Name:</strong> <%= @property.name %>
+      </div>
     <% end %>
     
     <% if notice %>
