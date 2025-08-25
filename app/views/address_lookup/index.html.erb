@@ -131,6 +131,52 @@
       padding: 2px 6px;
       border-radius: 3px;
     }
+    
+    .manual-form {
+      background: #fff3cd;
+      border: 1px solid #ffeaa7;
+      border-radius: 6px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+    
+    .manual-form h4 {
+      color: #856404;
+      margin: 0 0 15px 0;
+      font-size: 16px;
+    }
+    
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    
+    .form-row.single {
+      grid-template-columns: 1fr;
+    }
+    
+    .manual-form input[type="text"] {
+      padding: 10px;
+      font-size: 14px;
+    }
+    
+    .manual-form label {
+      font-size: 14px;
+      margin-bottom: 5px;
+    }
+    
+    .btn-manual {
+      background: #856404;
+      color: white;
+      width: 100%;
+      margin-top: 10px;
+    }
+    
+    .btn-manual:hover {
+      background: #6c5200;
+    }
   </style>
 </head>
 
@@ -201,7 +247,7 @@
         if (data.success) {
           showSuccessResult(data);
         } else {
-          showResult('error', 'Address Not Found', data.error || 'Unable to find this address.');
+          showNotFoundResult(address, data.error || 'Unable to find this address.');
         }
       } catch (error) {
         console.error('Search failed:', error);
@@ -236,6 +282,64 @@
       showResult('success', '✅ Address Found', content);
     }
     
+    function showNotFoundResult(originalAddress, errorMessage) {
+      const content = `
+        <div class="result-item" style="margin-bottom: 15px;">
+          <strong>Could not find address:</strong> ${escapeHtml(originalAddress)}
+        </div>
+        <div class="result-item" style="margin-bottom: 20px; color: #666;">
+          ${escapeHtml(errorMessage)}
+        </div>
+        
+        <div class="manual-form">
+          <h4>📝 Enter Address Details Manually</h4>
+          <form id="manualAddressForm">
+            <div class="form-row single">
+              <div>
+                <label for="manual_street">Street Address *</label>
+                <input type="text" id="manual_street" name="street_address" 
+                       placeholder="e.g., 123 Main Street" required>
+              </div>
+            </div>
+            <div class="form-row">
+              <div>
+                <label for="manual_city">City *</label>
+                <input type="text" id="manual_city" name="city" 
+                       placeholder="e.g., San Francisco" required>
+              </div>
+              <div>
+                <label for="manual_state">State/Province</label>
+                <input type="text" id="manual_state" name="state_province" 
+                       placeholder="e.g., CA">
+              </div>
+            </div>
+            <div class="form-row">
+              <div>
+                <label for="manual_postal">Postal Code</label>
+                <input type="text" id="manual_postal" name="postal_code" 
+                       placeholder="e.g., 94102">
+              </div>
+              <div>
+                <label for="manual_country">Country *</label>
+                <input type="text" id="manual_country" name="country" 
+                       placeholder="e.g., US" required>
+              </div>
+            </div>
+            <button type="submit" class="btn btn-manual">
+              📋 Create Observation with Manual Address
+            </button>
+          </form>
+        </div>
+      `;
+      
+      showResult('error', '❌ Address Not Found', content);
+      
+      // Add event listener for manual form submission
+      setTimeout(() => {
+        document.getElementById('manualAddressForm').addEventListener('submit', handleManualAddressSubmission);
+      }, 100);
+    }
+    
     function showResult(type, title, content) {
       const result = document.getElementById('result');
       const resultTitle = document.getElementById('resultTitle');
@@ -254,6 +358,61 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+    
+    function handleManualAddressSubmission(e) {
+      e.preventDefault();
+      
+      const formData = new FormData(e.target);
+      const addressData = {};
+      for (let [key, value] of formData.entries()) {
+        addressData[key] = value.trim();
+      }
+      
+      // Basic validation
+      if (!addressData.street_address || !addressData.city || !addressData.country) {
+        alert('Please fill in all required fields (Street Address, City, and Country).');
+        return;
+      }
+      
+      if (addressData.street_address.length < 5) {
+        alert('Street address must be at least 5 characters long.');
+        return;
+      }
+      
+      if (addressData.city.length < 2) {
+        alert('City must be at least 2 characters long.');
+        return;
+      }
+      
+      if (addressData.country.length < 2) {
+        alert('Country must be at least 2 characters long.');
+        return;
+      }
+      
+      // Create a formatted address string
+      const addressParts = [
+        addressData.street_address,
+        addressData.city,
+        addressData.state_province,
+        addressData.postal_code,
+        addressData.country
+      ].filter(part => part && part.trim());
+      
+      const formattedAddress = addressParts.join(', ');
+      
+      // Navigate to observations form with the manual address and property data
+      const url = new URL('/observations/new', window.location.origin);
+      url.searchParams.set('normalized_address', formattedAddress);
+      
+      // Add individual address components as well
+      Object.entries(addressData).forEach(([key, value]) => {
+        if (value) {
+          url.searchParams.set(key, value);
+        }
+      });
+      
+      window.location.href = url.toString();
     }
     
     function createObservation(formattedAddress) {

@@ -82,8 +82,20 @@ class ObservationsController < ApplicationController
       property = Property.find_by(normalized_address: params[:normalized_address])
       return property if property
 
-      # Create new property from normalized address
-      address_parts = parse_address(params[:normalized_address])
+      # Check if we have individual address components (from manual entry)
+      if params[:street_address].present?
+        address_parts = {
+          street_address: params[:street_address],
+          city: params[:city],
+          state_province: params[:state_province],
+          postal_code: params[:postal_code],
+          country: params[:country],
+          normalized_address: params[:normalized_address]
+        }
+      else
+        # Create new property from normalized address
+        address_parts = parse_address(params[:normalized_address])
+      end
       
       # Create property and skip address validation since address is already validated
       property = Property.new(
@@ -99,14 +111,19 @@ class ObservationsController < ApplicationController
       property
     else
       # Create a basic property if no address provided
-      Property.create!(
+      property = Property.new(
         name: "Unknown Property #{Time.current.strftime('%Y%m%d%H%M%S')}",
         property_type: 'residential',
         status: 'pending',
-        street_address: 'Unknown',
-        city: 'Unknown',
+        street_address: 'Unknown Address',
+        city: 'Unknown City',
         country: 'US'
       )
+      
+      # Set flag to skip address validation for this save
+      property.instance_variable_set(:@skip_address_validation, true)
+      property.save!
+      property
     end
   end
 
@@ -132,8 +149,8 @@ class ObservationsController < ApplicationController
     state_parts = state_postal.split(' ')
     
     {
-      street_address: parts[0] || 'Unknown',
-      city: parts[-3] || parts[-2] || 'Unknown',
+      street_address: (parts[0] && parts[0].length >= 5) ? parts[0] : 'Unknown Address',
+      city: parts[-3] || parts[-2] || 'Unknown City',
       state_province: state_parts[0] || '',
       postal_code: state_parts[-1] || '',
       country: country_code,
@@ -141,9 +158,10 @@ class ObservationsController < ApplicationController
     }
   rescue => e
     Rails.logger.error "Address parsing failed: #{e.message}"
+    street_part = normalized_address.split(',').first
     {
-      street_address: normalized_address.split(',').first || 'Unknown',
-      city: 'Unknown',
+      street_address: (street_part && street_part.length >= 5) ? street_part : 'Unknown Address',
+      city: 'Unknown City',
       country: 'US',
       normalized_address: normalized_address
     }
