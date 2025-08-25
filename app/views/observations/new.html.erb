@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Property Observation Form</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f8f9fa;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+      font-size: 16px;
+    }
+    
+    .address-info {
+      background: #e3f2fd;
+      border: 1px solid #bbdefb;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 30px;
+    }
+    
+    .address-info strong {
+      color: #1565c0;
+    }
+    
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 25px;
+      margin-bottom: 30px;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #555;
+    }
+    
+    .required {
+      color: #dc3545;
+    }
+    
+    select, input[type="number"] {
+      width: 100%;
+      padding: 12px;
+      border: 2px solid #ddd;
+      border-radius: 6px;
+      font-size: 16px;
+      transition: border-color 0.2s;
+      box-sizing: border-box;
+    }
+    
+    select:focus, input[type="number"]:focus {
+      outline: none;
+      border-color: #007bff;
+      box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+    }
+    
+    .btn {
+      background: #28a745;
+      color: white;
+      border: none;
+      padding: 15px 30px;
+      border-radius: 6px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      width: 100%;
+      margin-top: 20px;
+    }
+    
+    .btn:hover {
+      background: #218838;
+    }
+    
+    .btn-secondary {
+      background: #6c757d;
+      margin-right: 15px;
+      width: auto;
+      display: inline-block;
+      text-decoration: none;
+      text-align: center;
+    }
+    
+    .btn-secondary:hover {
+      background: #545b62;
+      color: white;
+    }
+    
+    .form-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 30px;
+    }
+    
+    .alert {
+      padding: 12px;
+      border-radius: 6px;
+      margin-bottom: 20px;
+    }
+    
+    .alert-success {
+      background: #d4edda;
+      border: 1px solid #c3e6cb;
+      color: #155724;
+    }
+    
+    .alert-error {
+      background: #f8d7da;
+      border: 1px solid #f5c6cb;
+      color: #721c24;
+    }
+    
+    .help-text {
+      font-size: 14px;
+      color: #666;
+      margin-top: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <h1>🏠 Property Observation Form</h1>
+    <p class="subtitle">Record detailed observations about property characteristics</p>
+    
+    <% if params[:normalized_address].present? %>
+      <div class="address-info">
+        <strong>Property Address:</strong> <%= params[:normalized_address] %>
+      </div>
+    <% end %>
+    
+    <% if notice %>
+      <div class="alert alert-success"><%= notice %></div>
+    <% end %>
+    
+    <% if @observation.errors.any? %>
+      <div class="alert alert-error">
+        <strong>Please fix the following errors:</strong>
+        <ul style="margin: 10px 0 0 20px;">
+          <% @observation.errors.full_messages.each do |message| %>
+            <li><%= message %></li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+    <%= form_with model: @observation, local: true do |form| %>
+      <%= hidden_field_tag :normalized_address, params[:normalized_address] %>
+      <%= hidden_field_tag :property_id, @property&.id %>
+      
+      <div class="form-grid">
+        <!-- Attic Vent Screen -->
+        <div class="form-group">
+          <%= label_tag 'observation[observations][attic_vent_screen]', 'Attic Vent Screen', class: "form-label" do %>
+            Attic Vent Screen <span class="required">*</span>
+          <% end %>
+          <%= select_tag 'observation[observations][attic_vent_screen]', 
+              options_for_select([
+                ['Select...', ''],
+                ['Yes', 'true'],
+                ['No', 'false']
+              ], params.dig(:observation, :observations, :attic_vent_screen)), 
+              { class: 'form-control', required: true } %>
+          <div class="help-text">Are attic vents protected with mesh screening?</div>
+        </div>
+
+        <!-- Roof Type -->
+        <div class="form-group">
+          <%= label_tag 'observation[observations][roof_type]', 'Roof Type', class: "form-label" do %>
+            Roof Type <span class="required">*</span>
+          <% end %>
+          <%= select_tag 'observation[observations][roof_type]', 
+              options_for_select([
+                ['Select roof type...', ''],
+                ['A', 'a'],
+                ['B', 'b'],
+                ['C', 'c']
+              ], params.dig(:observation, :observations, :roof_type)), 
+              { class: 'form-control', required: true } %>
+          <div class="help-text">Select roof type classification</div>
+        </div>
+
+        <!-- Wildfire Risk -->
+        <div class="form-group">
+          <%= label_tag 'observation[observations][wildfire_risk]', 'Wildfire Risk Level', class: "form-label" do %>
+            Wildfire Risk Level <span class="required">*</span>
+          <% end %>
+          <%= select_tag 'observation[observations][wildfire_risk]', 
+              options_for_select([
+                ['Select risk level...', ''],
+                ['Level A - Low Risk', 'a'],
+                ['Level B - Moderate Risk', 'b'], 
+                ['Level C - High Risk', 'c'],
+                ['Level D - Extreme Risk', 'd']
+              ], params.dig(:observation, :observations, :wildfire_risk)), 
+              { class: 'form-control', required: true } %>
+          <div class="help-text">A: Low, B: Moderate, C: High, D: Extreme</div>
+        </div>
+
+        <!-- Window Type -->
+        <div class="form-group">
+          <%= label_tag 'observation[observations][window_type]', 'Window Type', class: "form-label" do %>
+            Window Type <span class="required">*</span>
+          <% end %>
+          <%= select_tag 'observation[observations][window_type]', 
+              options_for_select([
+                ['Select window type...', ''],
+                ['Single Pane', 'single'],
+                ['Double Pane', 'double'],
+                ['Tempered Glass', 'tempered']
+              ], params.dig(:observation, :observations, :window_type)), 
+              { class: 'form-control', required: true } %>
+          <div class="help-text">Type of glazing and construction</div>
+        </div>
+
+        <!-- Vegetation Type -->
+        <div class="form-group">
+          <%= label_tag 'observation[observations][vegetation_type]', 'Vegetation Type', class: "form-label" do %>
+            Primary Vegetation Type <span class="required">*</span>
+          <% end %>
+          <%= select_tag 'observation[observations][vegetation_type]', 
+              options_for_select([
+                ['Select vegetation...', ''],
+                ['Trees', 'tree'],
+                ['Shrubs/Bushes', 'shrub'],
+                ['Grass/Ground Cover', 'grass']
+              ], params.dig(:observation, :observations, :vegetation_type)), 
+              { class: 'form-control', required: true } %>
+          <div class="help-text">Dominant vegetation around the property</div>
+        </div>
+
+        <!-- Distance to Window -->
+        <div class="form-group">
+          <%= label_tag 'observation[observations][distance_to_window]', 'Distance to Window (feet)', class: "form-label" do %>
+            Distance to Window (feet) <span class="required">*</span>
+          <% end %>
+          <%= number_field_tag 'observation[observations][distance_to_window]', 
+              params.dig(:observation, :observations, :distance_to_window),
+              { class: 'form-control', min: 0, step: 0.5, required: true, placeholder: 'e.g., 5.5' } %>
+          <div class="help-text">Distance from vegetation to nearest window</div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <%= link_to 'Back to Address Lookup', root_path, class: 'btn btn-secondary' %>
+        <%= form.submit 'Record Observation', class: 'btn' %>
+      </div>
+    <% end %>
+  </div>
+
+  <script>
+    // Form validation
+    document.querySelector('form').addEventListener('submit', function(e) {
+      const requiredSelects = document.querySelectorAll('select[required]');
+      const requiredNumbers = document.querySelectorAll('input[type="number"][required]');
+      
+      let isValid = true;
+      
+      requiredSelects.forEach(select => {
+        if (!select.value) {
+          isValid = false;
+          select.style.borderColor = '#dc3545';
+        } else {
+          select.style.borderColor = '#ddd';
+        }
+      });
+      
+      requiredNumbers.forEach(input => {
+        if (!input.value || parseFloat(input.value) < 0) {
+          isValid = false;
+          input.style.borderColor = '#dc3545';
+        } else {
+          input.style.borderColor = '#ddd';
+        }
+      });
+      
+      if (!isValid) {
+        e.preventDefault();
+        alert('Please fill in all required fields with valid values.');
+      }
+    });
+  </script>
+</body>
+</html>
