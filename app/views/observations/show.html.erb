@@ -1,139 +1,446 @@
-<div class="container mx-auto px-4 py-6">
-  <div class="max-w-4xl mx-auto">
-    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
-      <div class="flex justify-between items-start mb-6">
-        <h1 class="text-3xl font-bold text-gray-800">Observation Details</h1>
-        <%= link_to observations_path, class: "bg-gray-500 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded transition duration-200" do %>
-          ← Back to All Observations
-        <% end %>
-      </div>
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Observation Details</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <%= csrf_meta_tags %>
+  <%= csp_meta_tag %>
+  
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background-color: #f8f9fa;
+    }
+    
+    .container {
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    
+    h1 {
+      color: #333;
+      margin-bottom: 30px;
+      text-align: center;
+    }
+    
+    .actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+    
+    .btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 14px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    .btn:hover {
+      background: #0056b3;
+      color: white;
+    }
+    
+    .btn-success {
+      background: #28a745;
+    }
+    
+    .btn-success:hover {
+      background: #218838;
+    }
+    
+    .observation-card {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      background: #fafafa;
+      margin-bottom: 20px;
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 15px;
+    }
+    
+    .property-info {
+      flex: 1;
+    }
+    
+    .property-name {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 5px;
+    }
+    
+    .property-address {
+      font-size: 14px;
+      color: #666;
+      line-height: 1.4;
+    }
+    
+    .timestamp {
+      text-align: right;
+      font-size: 12px;
+      color: #888;
+    }
+    
+    .observation-data {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 15px;
+    }
+    
+    .data-item {
+      background: white;
+      padding: 10px;
+      border-radius: 4px;
+      border-left: 3px solid #007bff;
+    }
+    
+    .data-label {
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    
+    .data-value {
+      font-size: 14px;
+      color: #333;
+      font-weight: 500;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .badge-yes {
+      background: #d4edda;
+      color: #155724;
+    }
+    
+    .badge-no {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .badge-risk-a {
+      background: #d1ecf1;
+      color: #0c5460;
+    }
+    
+    .badge-risk-b {
+      background: #fff3cd;
+      color: #856404;
+    }
+    
+    .badge-risk-c {
+      background: #f8d7da;
+      color: #721c24;
+    }
+    
+    .badge-risk-d {
+      background: #dc3545;
+      color: white;
+    }
+    
+    .btn-fire-mitigation {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .btn-fire-mitigation:hover:not(:disabled) {
+      background: #c82333;
+    }
+    
+    .btn-fire-mitigation:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .card-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+    
+    .notes {
+      margin-top: 10px;
+      padding: 10px;
+      background: #fff;
+      border-radius: 4px;
+      font-style: italic;
+      color: #666;
+      border-left: 3px solid #6c757d;
+    }
+    
+    .mitigation-assessments {
+      margin-top: 15px;
+    }
+  </style>
+</head>
 
-      <!-- Property Information -->
-      <div class="bg-gray-50 rounded-lg p-4 mb-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-3">Property Information</h2>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <p class="text-gray-600"><strong>Name:</strong> <%= @observation.property.name %></p>
-            <p class="text-gray-600"><strong>Address:</strong> <%= @observation.property.street_address %></p>
-            <p class="text-gray-600"><strong>City:</strong> <%= @observation.property.city %></p>
-          </div>
-          <div>
-            <p class="text-gray-600"><strong>State/Province:</strong> <%= @observation.property.state_province %></p>
-            <p class="text-gray-600"><strong>Country:</strong> <%= @observation.property.country %></p>
-            <p class="text-gray-600"><strong>Type:</strong> <%= @observation.property.property_type.capitalize %></p>
-          </div>
-        </div>
+<body>
+  <div class="container">
+    <h1>📋 Observation Details</h1>
+    
+    <div class="actions">
+      <div></div>
+      <div>
+        <%= link_to '← Back to All Observations', observations_path, class: 'btn' %>
+        <%= link_to '🏠 Address Lookup', root_path, class: 'btn' %>
+        <%= link_to '➕ New Observation', new_observation_path, class: 'btn btn-success' %>
       </div>
-
-      <!-- Observation Data -->
-      <div class="bg-gray-50 rounded-lg p-4 mb-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-3">Observation Data</h2>
-        <p class="text-gray-600 mb-3"><strong>Recorded At:</strong> <%= @observation.recorded_at.strftime('%B %d, %Y at %I:%M %p') %></p>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <% @observation.observations&.each do |key, value| %>
-            <div class="bg-white p-3 rounded border">
-              <p class="font-medium text-gray-700"><%= key.humanize %>:</p>
-              <p class="text-gray-600"><%= value %></p>
-            </div>
-          <% end %>
-        </div>
-      </div>
-
-      <!-- Fire Mitigation Actions -->
-      <div class="bg-gray-50 rounded-lg p-4 mb-6">
-        <h2 class="text-xl font-semibold text-gray-800 mb-3">Fire Mitigation Assessment</h2>
-        
-        <% if @observation.mitigations.any? %>
-          <p class="text-green-600 mb-3">✅ Fire mitigation assessments have been performed for this observation.</p>
-        <% else %>
-          <p class="text-gray-600 mb-3">No fire mitigation assessments have been performed yet.</p>
-        <% end %>
-        
-        <%= button_to submit_to_fire_mitigation_observation_path(@observation), 
-            method: :post, 
-            class: "bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2 px-4 rounded transition duration-200",
-            confirm: "Submit this observation for fire mitigation assessment?" do %>
-          🔥 Submit for Fire Mitigation Assessment
-        <% end %>
-      </div>
-
-      <!-- Mitigation Results -->
-      <% @observation.mitigations.recent.each do |mitigation| %>
-        <% 
-          safe_distance_calc = mitigation.response_data.dig('data', 'result', 'safe_distance_calc').to_i
-          is_high_risk = safe_distance_calc > 0
-          bg_color = is_high_risk ? '#f8d7da' : '#d4edda'
-          text_color = is_high_risk ? '#721c24' : '#155724'
-          border_color = is_high_risk ? '#f5c6cb' : '#c3e6cb'
-        %>
-        
-        <div class="rounded-lg p-4 mb-4 border-l-4" style="background-color: <%= bg_color %>; color: <%= text_color %>; border-left-color: <%= border_color %>;">
-          <div class="flex items-center justify-between mb-3">
-            <h3 class="text-lg font-semibold">
-              <%= is_high_risk ? '🔥' : '✅' %> Fire Mitigation Assessment
-              <span class="text-sm font-normal">
-                (<%= mitigation.submitted_at.strftime('%B %d, %Y at %I:%M %p') %>)
+    </div>
+    
+    <div class="observation-card">
+      <div class="card-header">
+        <div class="property-info">
+          <div class="property-name">
+            <%= @observation.property.name %>
+            <% if @observation.latest_mitigation %>
+              <span class="mitigation-status" style="margin-left: 10px;">
+                🔥 <%= @observation.latest_mitigation.success? ? '✅' : '❌' %>
+                <span class="badge <%= @observation.latest_mitigation.success? ? 'badge-yes' : 'badge-no' %>" style="font-size: 10px;">
+                  <%= @observation.latest_mitigation.success? ? 'ASSESSED' : 'FAILED' %>
+                </span>
               </span>
-            </h3>
-            <span class="px-2 py-1 rounded text-xs font-semibold <%= mitigation.success? ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' %>">
-              <%= mitigation.status.upcase %>
-            </span>
-          </div>
-          
-          <% if mitigation.success? && mitigation.response_data.dig('data', 'result') %>
-            <% result = mitigation.response_data.dig('data', 'result') %>
-            
-            <!-- Risk Assessment -->
-            <div class="mb-4">
-              <h4 class="font-semibold mb-2">Risk Assessment:</h4>
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <p><strong>Safe Distance:</strong> <%= result['safe_distance'] %> feet</p>
-                  <p><strong>Calculated Distance:</strong> <%= result['safe_distance_calc'] %> feet</p>
-                </div>
-                <div>
-                  <p><strong>Fire Risk Level:</strong> <%= result['fire_risk_level'] %></p>
-                  <p><strong>Structure Risk:</strong> <%= result['structure_risk'] %></p>
-                </div>
-                <div>
-                  <p><strong>Overall Score:</strong> <%= result['overall_risk_score'] %>/100</p>
-                  <% if is_high_risk %>
-                    <p class="font-semibold">⚠️ High Risk Property</p>
-                  <% else %>
-                    <p class="font-semibold">✅ Low Risk Property</p>
-                  <% end %>
-                </div>
-              </div>
-            </div>
-            
-            <!-- Mitigation Recommendations -->
-            <% if result['mitigations']&.any? %>
-              <div class="mb-4">
-                <h4 class="font-semibold mb-2">Recommended Mitigations:</h4>
-                <ul class="list-disc list-inside space-y-1">
-                  <% result['mitigations'].each do |rec| %>
-                    <li><%= rec %></li>
-                  <% end %>
-                </ul>
-              </div>
             <% end %>
-          <% else %>
-            <!-- Error Display -->
-            <div class="bg-red-50 border border-red-200 rounded p-3">
-              <p class="text-red-800"><strong>Error:</strong> <%= mitigation.response_data['message'] %></p>
+          </div>
+          <div class="property-address"><%= @observation.property.normalized_address || [@observation.property.street_address, @observation.property.city, @observation.property.state_province, @observation.property.country].compact.reject(&:blank?).join(', ') %></div>
+        </div>
+        <div class="timestamp">
+          <%= time_tag @observation.recorded_at, @observation.recorded_at.strftime("%b %d, %Y at %l:%M %p") %>
+          <% if @observation.latest_mitigation %>
+            <div style="font-size: 11px; color: #666; margin-top: 3px;">
+              Last Assessment: <%= @observation.latest_mitigation.submitted_at.strftime("%b %d, %l:%M %p") %>
             </div>
           <% end %>
-          
-          <!-- Performance Info -->
-          <% if mitigation.performance_time %>
-            <div class="text-sm opacity-75 mt-3">
-              <p><strong>Processing Time:</strong> <%= mitigation.performance_time %> seconds</p>
-              <p><strong>Request ID:</strong> <%= mitigation.request_id %></p>
+        </div>
+      </div>
+      
+      <div class="observation-data">
+        <% if @observation.observations['attic_vent_screen'].present? %>
+          <div class="data-item">
+            <div class="data-label">Attic Vent Screen</div>
+            <div class="data-value">
+              <span class="badge <%= @observation.observations['attic_vent_screen'] == 'true' ? 'badge-yes' : 'badge-no' %>">
+                <%= @observation.observations['attic_vent_screen'] == 'true' ? 'Yes' : 'No' %>
+              </span>
+            </div>
+          </div>
+        <% end %>
+        
+        <% if @observation.observations['roof_type'].present? %>
+          <div class="data-item">
+            <div class="data-label">Roof Type</div>
+            <div class="data-value">Type <%= @observation.observations['roof_type'].upcase %></div>
+          </div>
+        <% end %>
+        
+        <% if @observation.observations['wildfire_risk'].present? %>
+          <div class="data-item">
+            <div class="data-label">Wildfire Risk</div>
+            <div class="data-value">
+              <span class="badge badge-risk-<%= @observation.observations['wildfire_risk'] %>">
+                Level <%= @observation.observations['wildfire_risk'].upcase %>
+                <%= case @observation.observations['wildfire_risk']
+                    when 'a' then '(Low)'
+                    when 'b' then '(Moderate)'
+                    when 'c' then '(High)'
+                    when 'd' then '(Extreme)'
+                    end %>
+              </span>
+            </div>
+          </div>
+        <% end %>
+        
+        <% if @observation.observations['window_type'].present? %>
+          <div class="data-item">
+            <div class="data-label">Window Type</div>
+            <div class="data-value"><%= @observation.observations['window_type'].titleize %></div>
+          </div>
+        <% end %>
+        
+        <% if @observation.observations['vegetation_type'].present? %>
+          <div class="data-item">
+            <div class="data-label">Vegetation Type</div>
+            <div class="data-value"><%= @observation.observations['vegetation_type'].titleize %></div>
+          </div>
+        <% end %>
+        
+        <% if @observation.observations['distance_to_window'].present? %>
+          <div class="data-item">
+            <div class="data-label">Distance to Window</div>
+            <div class="data-value"><%= @observation.observations['distance_to_window'] %> feet</div>
+          </div>
+        <% end %>
+      </div>
+      
+      <% if @observation.notes.present? %>
+        <div class="notes">
+          <strong>Notes:</strong> <%= @observation.notes %>
+        </div>
+      <% end %>
+      
+      <% if @observation.mitigations.any? %>
+        <div class="mitigation-assessments">
+          <h4 style="margin: 0 0 15px 0; color: #333; font-size: 14px;">🔥 Fire Mitigation Assessments (<%= @observation.mitigations.count %>)</h4>
+          <% @observation.mitigations.recent.each_with_index do |mitigation, index| %>
+            <% 
+              # Determine risk level based on safe_distance_calc
+              safe_distance_calc = mitigation.response_data.dig('data', 'result', 'safe_distance_calc').to_i
+              is_high_risk = safe_distance_calc > 0
+              
+              if mitigation.success?
+                if is_high_risk
+                  bg_color = '#f8d7da'    # Red for high risk
+                  border_color = '#dc3545' # Red border
+                  text_color = '#721c24'   # Dark red text
+                else
+                  bg_color = '#d4edda'    # Green for low/no risk
+                  border_color = '#28a745' # Green border
+                  text_color = '#155724'   # Dark green text
+                end
+              else
+                bg_color = '#f8d7da'      # Red for failed assessment
+                border_color = '#dc3545'  # Red border
+                text_color = '#721c24'     # Dark red text
+              end
+            %>
+            <div class="mitigation-card" style="margin-bottom: 20px; padding: 15px; background: <%= bg_color %>; border-radius: 6px; border-left: 4px solid <%= border_color %>;">
+              
+              <!-- Header -->
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                <div>
+                  <strong style="color: <%= text_color %>;">
+                    <%= is_high_risk ? '🔥' : (mitigation.success? ? '✅' : '❌') %> Assessment #<%= mitigation.id %>
+                    <% if is_high_risk && mitigation.success? %>
+                      <span style="color: #dc3545; font-size: 11px;">(HIGH RISK)</span>
+                    <% end %>
+                  </strong>
+                  <span style="margin-left: 10px; font-size: 11px; color: #666;">
+                    <%= mitigation.submitted_at.strftime("%b %d, %Y at %l:%M %p") %>
+                  </span>
+                </div>
+                <span class="badge <%= is_high_risk ? 'badge-no' : (mitigation.success? ? 'badge-yes' : 'badge-no') %>" style="font-size: 10px;">
+                  <%= is_high_risk && mitigation.success? ? 'HIGH RISK' : mitigation.status.upcase %>
+                </span>
+              </div>
+
+              <!-- Request Info -->
+              <div style="font-size: 12px; margin-bottom: 10px; color: #666;">
+                <strong>Request ID:</strong> <%= mitigation.request_id %>
+                <% if mitigation.performance_time %>
+                  | <strong>Performance:</strong> <%= mitigation.performance_time %>
+                <% end %>
+              </div>
+
+              <% if mitigation.success? && mitigation.response_data.dig('data', 'result') %>
+                <% result = mitigation.response_data.dig('data', 'result') %>
+                
+                <!-- Risk Assessment -->
+                <div style="margin-bottom: 12px;">
+                  <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; font-size: 12px;">
+                    <% if result['safe_distance_calc'] %>
+                      <div style="<%= result['safe_distance_calc'].to_i > 0 ? 'color: #dc3545; font-weight: bold;' : '' %>">
+                        <strong>Calc Distance:</strong> <%= result['safe_distance_calc'] %>ft
+                        <% if result['safe_distance_calc'].to_i > 0 %>
+                          <span style="color: #dc3545;">⚠️</span>
+                        <% end %>
+                      </div>
+                    <% end %>
+                    <% if result['distance'] %>
+                      <div><strong>Current Distance:</strong> <%= result['distance'] %>ft</div>
+                    <% end %>
+                    <% if result['safe_distance_diff'] %>
+                      <div><strong>Difference:</strong> <%= result['safe_distance_diff'] %>ft</div>
+                    <% end %>
+                    <% if result['risk_type'] %>
+                      <div><strong>Risk Type:</strong> <%= result['risk_type'].titleize %></div>
+                    <% end %>
+                    <% if result['window_type'] %>
+                      <div><strong>Window:</strong> <%= result['window_type'].titleize %></div>
+                    <% end %>
+                    <% if result['vegetation_type'] %>
+                      <div><strong>Vegetation:</strong> <%= result['vegetation_type'].titleize %></div>
+                    <% end %>
+                  </div>
+                </div>
+
+                <!-- Mitigation Recommendations -->
+                <% if result['mitigations'] %>
+                  <div style="margin-top: 12px;">
+                    <strong style="font-size: 13px; color: #333;">🛡️ Recommendations:</strong>
+                    <% result['mitigations'].each do |category, recommendations| %>
+                      <div style="margin: 8px 0;">
+                        <strong style="font-size: 12px; color: #555;"><%= category.titleize %> Solutions:</strong>
+                        <ul style="margin: 4px 0 0 20px; padding: 0; font-size: 11px;">
+                          <% recommendations.each do |rec| %>
+                            <li style="margin-bottom: 2px;"><%= rec %></li>
+                          <% end %>
+                        </ul>
+                      </div>
+                    <% end %>
+                  </div>
+                <% end %>
+              <% else %>
+                <!-- Failed Assessment -->
+                <div style="color: #721c24; font-size: 12px;">
+                  <strong>Message:</strong> <%= mitigation.response_data['message'] || 'Assessment failed' %>
+                </div>
+              <% end %>
+
+              <!-- Metadata (collapsible) -->
+              <details style="margin-top: 10px;">
+                <summary style="font-size: 11px; color: #666; cursor: pointer;">Show Raw Data</summary>
+                <pre style="font-size: 10px; background: #f8f9fa; padding: 8px; border-radius: 3px; margin-top: 5px; overflow-x: auto;"><%= JSON.pretty_generate(mitigation.response_data) %></pre>
+              </details>
             </div>
           <% end %>
         </div>
       <% end %>
+      
+      <div class="card-actions" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+        <%= button_to @observation.has_successful_mitigation? ? 'Re-assess Fire Mitigation' : 'Submit to Fire Mitigation', 
+            submit_to_fire_mitigation_observation_path(@observation), 
+            method: :post,
+            class: 'btn-fire-mitigation',
+            data: { 
+              confirm: 'Submit this observation to fire mitigation service?',
+              disable_with: 'Submitting...',
+              turbo: false
+            } %>
+      </div>
     </div>
   </div>
-</div>
+</body>
+</html>
