@@ -1,6 +1,8 @@
 class Property < ApplicationRecord
   include AddressValidatable
 
+  has_many :observations, dependent: :destroy
+
   validates :name, presence: true, length: { minimum: 2, maximum: 255 }
   validates :property_type, presence: true, inclusion: { 
     in: %w[residential commercial industrial mixed_use land] 

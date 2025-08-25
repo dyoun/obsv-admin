@@ -75,6 +75,16 @@
       cursor: not-allowed;
     }
     
+    .btn-observation {
+      background: #28a745;
+      margin-top: 10px;
+      width: 100%;
+    }
+    
+    .btn-observation:hover {
+      background: #218838;
+    }
+    
     .loading {
       display: none;
       margin-left: 10px;
@@ -215,6 +225,12 @@
             <span class="coordinates">${data.latitude}, ${data.longitude}</span>
           </div>
         ` : ''}
+        <div class="result-actions" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(0,0,0,0.1);">
+          <button onclick="createObservation('${escapeHtml(data.formatted_address)}')" 
+                  class="btn btn-observation">
+            📋 Create Observation for This Address
+          </button>
+        </div>
       `;
       
       showResult('success', '✅ Address Found', content);
@@ -238,6 +254,13 @@
       const div = document.createElement('div');
       div.textContent = text;
       return div.innerHTML;
+    }
+    
+    function createObservation(formattedAddress) {
+      // Navigate to observations form with the validated address
+      const url = new URL('/observations/new', window.location.origin);
+      url.searchParams.set('normalized_address', formattedAddress);
+      window.location.href = url.toString();
     }
   </script>
 </body>

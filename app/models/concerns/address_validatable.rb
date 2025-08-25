@@ -28,6 +28,8 @@ module AddressValidatable
   end
 
   def should_validate_address?
+    return false if @skip_address_validation
+    
     street_address_changed? || city_changed? || state_province_changed? || 
     postal_code_changed? || country_changed?
   end
