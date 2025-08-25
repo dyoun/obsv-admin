@@ -10,9 +10,23 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_24_234501) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_25_200539) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "mitigations", force: :cascade do |t|
+    t.bigint "observation_id", null: false
+    t.jsonb "response_data"
+    t.datetime "submitted_at"
+    t.string "status"
+    t.string "request_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["observation_id"], name: "index_mitigations_on_observation_id"
+    t.index ["response_data"], name: "index_mitigations_on_response_data", using: :gin
+    t.index ["status"], name: "index_mitigations_on_status"
+    t.index ["submitted_at"], name: "index_mitigations_on_submitted_at"
+  end
 
   create_table "observations", force: :cascade do |t|
     t.json "observations"
@@ -44,5 +58,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_24_234501) do
     t.index ["status"], name: "index_properties_on_status"
   end
 
+  add_foreign_key "mitigations", "observations"
   add_foreign_key "observations", "properties"
 end

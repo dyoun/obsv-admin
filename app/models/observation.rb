@@ -1,5 +1,6 @@
 class Observation < ApplicationRecord
   belongs_to :property
+  has_many :mitigations, dependent: :destroy
 
   validates :recorded_at, presence: true
   validates :observations, presence: true
@@ -22,5 +23,17 @@ class Observation < ApplicationRecord
 
   def recorded_today?
     recorded_at&.to_date == Date.current
+  end
+  
+  def latest_mitigation
+    mitigations.recent.first
+  end
+  
+  def successful_mitigations
+    mitigations.successful
+  end
+  
+  def has_successful_mitigation?
+    mitigations.successful.exists?
   end
 end

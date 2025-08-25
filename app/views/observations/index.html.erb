@@ -357,40 +357,60 @@
   <div class="container">
     <h1>📋 Recent Observations</h1>
     
-    <% if @fire_mitigation_result %>
-      <div class="fire-mitigation-result <%= @fire_mitigation_result['success'] ? 'success' : 'error' %>">
+    <% if @latest_mitigation_id.present? %>
+      <% latest_mitigation = Mitigation.find(@latest_mitigation_id) %>
+      <div class="fire-mitigation-result <%= latest_mitigation.success? ? 'success' : 'error' %>">
         <button class="close-result" onclick="this.parentElement.style.display='none'">×</button>
         
         <div class="result-header">
           <h3 class="result-title">
-            🔥 Fire Mitigation Service Response
-            <%= @fire_mitigation_result['success'] ? '✅' : '❌' %>
+            🔥 Fire Mitigation Assessment Complete
+            <%= latest_mitigation.success? ? '✅' : '❌' %>
           </h3>
           <div class="result-timestamp">
-            <% if @fire_mitigation_result['timestamp'].present? %>
-              <%= Time.parse(@fire_mitigation_result['timestamp']).strftime("%b %d, %Y at %l:%M %p") rescue 'Just now' %>
-            <% else %>
-              Just now
-            <% end %>
+            <%= latest_mitigation.submitted_at.strftime("%b %d, %Y at %l:%M %p") %>
           </div>
         </div>
         
         <div class="result-message">
-          <strong>Observation #<%= @fire_mitigation_result['observation_id'] %>:</strong>
-          <%= @fire_mitigation_result['message'] %>
+          <strong>Observation #<%= latest_mitigation.observation.id %> - Request ID: <%= latest_mitigation.request_id %>:</strong>
+          <%= latest_mitigation.response_data['message'] %>
         </div>
         
-        <% if @fire_mitigation_result['data'].present? %>
+        <% if latest_mitigation.performance_time.present? %>
           <div class="result-data">
-            <h4>📊 Response Data:</h4>
-            <pre><%= JSON.pretty_generate(@fire_mitigation_result['data']) %></pre>
+            <h4>⚡ Performance:</h4>
+            <pre>Response Time: <%= latest_mitigation.performance_time %></pre>
           </div>
         <% end %>
         
-        <% if @fire_mitigation_result['metadata'].present? %>
+        <% if latest_mitigation.risk_assessment.present? %>
+          <div class="result-data">
+            <h4>📊 Risk Assessment:</h4>
+            <pre><%= JSON.pretty_generate(latest_mitigation.risk_assessment) %></pre>
+          </div>
+        <% end %>
+        
+        <% if latest_mitigation.mitigation_recommendations.present? %>
+          <div class="result-data">
+            <h4>🛡️ Mitigation Recommendations:</h4>
+            <% latest_mitigation.mitigation_recommendations.each do |category, recommendations| %>
+              <div style="margin-bottom: 15px;">
+                <strong><%= category.titleize %>:</strong>
+                <ul style="margin: 5px 0; padding-left: 20px;">
+                  <% recommendations.each do |recommendation| %>
+                    <li><%= recommendation %></li>
+                  <% end %>
+                </ul>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+        
+        <% if latest_mitigation.response_data['metadata'].present? %>
           <div class="result-data" style="margin-top: 10px;">
             <h4>🔍 Metadata:</h4>
-            <pre><%= JSON.pretty_generate(@fire_mitigation_result['metadata']) %></pre>
+            <pre><%= JSON.pretty_generate(latest_mitigation.response_data['metadata']) %></pre>
           </div>
         <% end %>
       </div>
@@ -485,8 +505,33 @@
               </div>
             <% end %>
             
+            <% if observation.mitigations.any? %>
+              <div class="mitigation-history" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid #17a2b8;">
+                <h4 style="margin: 0 0 10px 0; color: #333; font-size: 14px;">🔥 Fire Mitigation History:</h4>
+                <% observation.mitigations.recent.limit(3).each do |mitigation| %>
+                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 12px;">
+                    <span>
+                      <%= mitigation.success? ? '✅' : '❌' %>
+                      <%= mitigation.submitted_at.strftime("%b %d, %l:%M %p") %>
+                      <% if mitigation.safe_distance %>
+                        - Safe Distance: <%= mitigation.safe_distance %>ft
+                      <% end %>
+                    </span>
+                    <span class="badge <%= mitigation.success? ? 'badge-yes' : 'badge-no' %>">
+                      <%= mitigation.status.titleize %>
+                    </span>
+                  </div>
+                <% end %>
+                <% if observation.mitigations.count > 3 %>
+                  <div style="font-size: 11px; color: #666; margin-top: 5px;">
+                    ... and <%= observation.mitigations.count - 3 %> more assessments
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+            
             <div class="card-actions" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
-              <%= button_to 'Submit to Fire Mitigation', 
+              <%= button_to observation.has_successful_mitigation? ? 'Re-assess Fire Mitigation' : 'Submit to Fire Mitigation', 
                   submit_to_fire_mitigation_observation_path(observation), 
                   method: :post,
                   class: 'btn-fire-mitigation',

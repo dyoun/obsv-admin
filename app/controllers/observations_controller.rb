@@ -1,12 +1,12 @@
 class ObservationsController < ApplicationController
   def index
-    @observations = Observation.includes(:property)
+    @observations = Observation.includes(:property, :mitigations)
                               .recent
                               .page(params[:page])
                               .per(10)
     
-    # Get fire mitigation result from session if present
-    @fire_mitigation_result = session.delete(:fire_mitigation_result)
+    # Get latest mitigation ID from session to highlight it
+    @latest_mitigation_id = session.delete(:latest_mitigation_id)
   end
 
   def new
@@ -31,20 +31,27 @@ class ObservationsController < ApplicationController
     
     result = FireMitigationService.submit_observation(@observation)
     
-    # Store the result in session to display on the page
-    session[:fire_mitigation_result] = {
-      observation_id: @observation.id,
-      success: result.success?,
-      message: result.message,
-      data: result.data,
-      metadata: result.metadata,
-      timestamp: Time.current
-    }
+    # Create mitigation record to store the response
+    mitigation = @observation.mitigations.create!(
+      submitted_at: Time.current,
+      status: result.success? ? 'success' : 'failure',
+      request_id: extract_request_id(result.data),
+      response_data: {
+        message: result.message,
+        data: result.data,
+        metadata: result.metadata
+      }
+    )
+    
+    # Store mitigation ID in session to highlight it on the page
+    session[:latest_mitigation_id] = mitigation.id
     
     if result.success?
       Rails.logger.info "Fire mitigation submission successful for observation #{@observation.id}: #{result.message}"
+      flash[:notice] = 'Fire mitigation assessment completed successfully!'
     else
       Rails.logger.error "Fire mitigation submission failed for observation #{@observation.id}: #{result.message}"
+      flash[:alert] = "Fire mitigation assessment failed: #{result.message}"
     end
     
     redirect_to observations_path
@@ -136,5 +143,9 @@ class ObservationsController < ApplicationController
       country: 'US',
       normalized_address: normalized_address
     }
+  end
+  
+  def extract_request_id(data)
+    data&.dig('request_id') || "req-#{Time.current.to_i}"
   end
 end
