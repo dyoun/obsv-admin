@@ -242,12 +242,159 @@
       color: #666;
       border-left: 3px solid #6c757d;
     }
+    
+    .btn-fire-mitigation {
+      background: #dc3545;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .btn-fire-mitigation:hover:not(:disabled) {
+      background: #c82333;
+    }
+    
+    .btn-fire-mitigation:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+    
+    .card-actions {
+      display: flex;
+      justify-content: flex-end;
+    }
+    
+    .fire-mitigation-result {
+      background: #e8f4fd;
+      border: 1px solid #b6d7ff;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+      position: relative;
+    }
+    
+    .fire-mitigation-result.success {
+      background: #d4edda;
+      border-color: #c3e6cb;
+    }
+    
+    .fire-mitigation-result.error {
+      background: #f8d7da;
+      border-color: #f5c6cb;
+    }
+    
+    .result-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .result-title {
+      font-weight: 600;
+      color: #333;
+      margin: 0;
+    }
+    
+    .result-timestamp {
+      font-size: 12px;
+      color: #666;
+    }
+    
+    .result-message {
+      margin-bottom: 15px;
+      color: #555;
+    }
+    
+    .result-data {
+      background: white;
+      border-radius: 4px;
+      padding: 15px;
+      border-left: 3px solid #007bff;
+    }
+    
+    .result-data h4 {
+      margin: 0 0 10px 0;
+      color: #333;
+      font-size: 14px;
+    }
+    
+    .result-data pre {
+      background: #f8f9fa;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 12px;
+      margin: 0;
+      overflow-x: auto;
+    }
+    
+    .close-result {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      background: none;
+      border: none;
+      font-size: 20px;
+      cursor: pointer;
+      color: #666;
+      line-height: 1;
+    }
+    
+    .close-result:hover {
+      color: #333;
+    }
   </style>
 </head>
 
 <body>
   <div class="container">
     <h1>📋 Recent Observations</h1>
+    
+    <% if @fire_mitigation_result %>
+      <div class="fire-mitigation-result <%= @fire_mitigation_result['success'] ? 'success' : 'error' %>">
+        <button class="close-result" onclick="this.parentElement.style.display='none'">×</button>
+        
+        <div class="result-header">
+          <h3 class="result-title">
+            🔥 Fire Mitigation Service Response
+            <%= @fire_mitigation_result['success'] ? '✅' : '❌' %>
+          </h3>
+          <div class="result-timestamp">
+            <% if @fire_mitigation_result['timestamp'].present? %>
+              <%= Time.parse(@fire_mitigation_result['timestamp']).strftime("%b %d, %Y at %l:%M %p") rescue 'Just now' %>
+            <% else %>
+              Just now
+            <% end %>
+          </div>
+        </div>
+        
+        <div class="result-message">
+          <strong>Observation #<%= @fire_mitigation_result['observation_id'] %>:</strong>
+          <%= @fire_mitigation_result['message'] %>
+        </div>
+        
+        <% if @fire_mitigation_result['data'].present? %>
+          <div class="result-data">
+            <h4>📊 Response Data:</h4>
+            <pre><%= JSON.pretty_generate(@fire_mitigation_result['data']) %></pre>
+          </div>
+        <% end %>
+        
+        <% if @fire_mitigation_result['metadata'].present? %>
+          <div class="result-data" style="margin-top: 10px;">
+            <h4>🔍 Metadata:</h4>
+            <pre><%= JSON.pretty_generate(@fire_mitigation_result['metadata']) %></pre>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
     
     <div class="actions">
       <div class="stats">
@@ -337,6 +484,18 @@
                 <strong>Notes:</strong> <%= observation.notes %>
               </div>
             <% end %>
+            
+            <div class="card-actions" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">
+              <%= button_to 'Submit to Fire Mitigation', 
+                  submit_to_fire_mitigation_observation_path(observation), 
+                  method: :post,
+                  class: 'btn-fire-mitigation',
+                  data: { 
+                    confirm: 'Submit this observation to fire mitigation service?',
+                    disable_with: 'Submitting...',
+                    turbo: false
+                  } %>
+            </div>
           </div>
         <% end %>
       </div>

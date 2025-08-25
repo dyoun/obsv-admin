@@ -4,6 +4,9 @@ class ObservationsController < ApplicationController
                               .recent
                               .page(params[:page])
                               .per(10)
+    
+    # Get fire mitigation result from session if present
+    @fire_mitigation_result = session.delete(:fire_mitigation_result)
   end
 
   def new
@@ -21,6 +24,37 @@ class ObservationsController < ApplicationController
     else
       render :new, status: :unprocessable_entity
     end
+  end
+
+  def submit_to_fire_mitigation
+    @observation = Observation.find(params[:id])
+    
+    result = FireMitigationService.submit_observation(@observation)
+    
+    # Store the result in session to display on the page
+    session[:fire_mitigation_result] = {
+      observation_id: @observation.id,
+      success: result.success?,
+      message: result.message,
+      data: result.data,
+      metadata: result.metadata,
+      timestamp: Time.current
+    }
+    
+    if result.success?
+      Rails.logger.info "Fire mitigation submission successful for observation #{@observation.id}: #{result.message}"
+    else
+      Rails.logger.error "Fire mitigation submission failed for observation #{@observation.id}: #{result.message}"
+    end
+    
+    redirect_to observations_path
+  rescue ActiveRecord::RecordNotFound
+    flash[:alert] = 'Observation not found'
+    redirect_to observations_path
+  rescue StandardError => e
+    Rails.logger.error "Fire mitigation submission error: #{e.message}"
+    flash[:alert] = 'An error occurred while submitting to fire mitigation service'
+    redirect_back(fallback_location: observations_path)
   end
 
   private

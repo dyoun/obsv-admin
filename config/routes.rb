@@ -1,5 +1,9 @@
 Rails.application.routes.draw do
-  resources :observations, only: [:index, :new, :create]
+  resources :observations, only: [:index, :new, :create] do
+    member do
+      post :submit_to_fire_mitigation
+    end
+  end
   get "address_lookup/index"
   post "address_lookup/search"
   

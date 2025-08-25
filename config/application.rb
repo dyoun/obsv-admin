@@ -38,6 +38,9 @@ module RulesAdmin
     
     # Address validation configuration
     config.address_validator = :openstreetmap
+    
+    # Fire mitigation service configuration
+    config.fire_mitigation_client = :http
 
     # Don't generate system test files.
     config.generators.system_tests = nil
