@@ -26,7 +26,7 @@ class Observation < ApplicationRecord
   end
   
   def latest_mitigation
-    mitigations.recent.first
+    @latest_mitigation ||= mitigations.recent.first
   end
   
   def successful_mitigations

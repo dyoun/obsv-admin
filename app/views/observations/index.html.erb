@@ -433,11 +433,26 @@
           <div class="observation-card">
             <div class="card-header">
               <div class="property-info">
-                <div class="property-name"><%= observation.property.name %></div>
+                <div class="property-name">
+                  <%= observation.property.name %>
+                  <% if observation.latest_mitigation %>
+                    <span class="mitigation-status" style="margin-left: 10px;">
+                      🔥 <%= observation.latest_mitigation.success? ? '✅' : '❌' %>
+                      <span class="badge <%= observation.latest_mitigation.success? ? 'badge-yes' : 'badge-no' %>" style="font-size: 10px;">
+                        <%= observation.latest_mitigation.success? ? 'ASSESSED' : 'FAILED' %>
+                      </span>
+                    </span>
+                  <% end %>
+                </div>
                 <div class="property-address"><%= observation.property.normalized_address || observation.property.full_address %></div>
               </div>
               <div class="timestamp">
                 <%= time_tag observation.recorded_at, observation.recorded_at.strftime("%b %d, %Y at %l:%M %p") %>
+                <% if observation.latest_mitigation %>
+                  <div style="font-size: 11px; color: #666; margin-top: 3px;">
+                    Last Assessment: <%= observation.latest_mitigation.submitted_at.strftime("%b %d, %l:%M %p") %>
+                  </div>
+                <% end %>
               </div>
             </div>
             
@@ -506,25 +521,124 @@
             <% end %>
             
             <% if observation.mitigations.any? %>
-              <div class="mitigation-history" style="margin-top: 15px; padding: 10px; background: #f8f9fa; border-radius: 4px; border-left: 3px solid #17a2b8;">
-                <h4 style="margin: 0 0 10px 0; color: #333; font-size: 14px;">🔥 Fire Mitigation History:</h4>
-                <% observation.mitigations.recent.limit(3).each do |mitigation| %>
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; font-size: 12px;">
-                    <span>
-                      <%= mitigation.success? ? '✅' : '❌' %>
-                      <%= mitigation.submitted_at.strftime("%b %d, %l:%M %p") %>
-                      <% if mitigation.safe_distance %>
-                        - Safe Distance: <%= mitigation.safe_distance %>ft
+              <div class="mitigation-assessments" style="margin-top: 15px;">
+                <h4 style="margin: 0 0 15px 0; color: #333; font-size: 14px;">🔥 Fire Mitigation Assessments (<%= observation.mitigations.count %>)</h4>
+                <% observation.mitigations.recent.each_with_index do |mitigation, index| %>
+                  <% 
+                    # Determine risk level based on safe_distance_calc
+                    safe_distance_calc = mitigation.response_data.dig('data', 'result', 'safe_distance_calc').to_i
+                    is_high_risk = safe_distance_calc > 0
+                    
+                    if mitigation.success?
+                      if is_high_risk
+                        bg_color = '#f8d7da'    # Red for high risk
+                        border_color = '#dc3545' # Red border
+                        text_color = '#721c24'   # Dark red text
+                      else
+                        bg_color = '#d4edda'    # Green for low/no risk
+                        border_color = '#28a745' # Green border
+                        text_color = '#155724'   # Dark green text
+                      end
+                    else
+                      bg_color = '#f8d7da'      # Red for failed assessment
+                      border_color = '#dc3545'  # Red border
+                      text_color = '#721c24'     # Dark red text
+                    end
+                  %>
+                  <div class="mitigation-card" style="margin-bottom: 20px; padding: 15px; background: <%= bg_color %>; border-radius: 6px; border-left: 4px solid <%= border_color %>;">
+                    
+                    <!-- Header -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                      <div>
+                        <strong style="color: <%= text_color %>;">
+                          <%= is_high_risk ? '🔥' : (mitigation.success? ? '✅' : '❌') %> Assessment #<%= mitigation.id %>
+                          <% if is_high_risk && mitigation.success? %>
+                            <span style="color: #dc3545; font-size: 11px;">(HIGH RISK)</span>
+                          <% end %>
+                        </strong>
+                        <span style="margin-left: 10px; font-size: 11px; color: #666;">
+                          <%= mitigation.submitted_at.strftime("%b %d, %Y at %l:%M %p") %>
+                        </span>
+                      </div>
+                      <span class="badge <%= is_high_risk ? 'badge-no' : (mitigation.success? ? 'badge-yes' : 'badge-no') %>" style="font-size: 10px;">
+                        <%= is_high_risk && mitigation.success? ? 'HIGH RISK' : mitigation.status.upcase %>
+                      </span>
+                    </div>
+
+                    <!-- Request Info -->
+                    <div style="font-size: 12px; margin-bottom: 10px; color: #666;">
+                      <strong>Request ID:</strong> <%= mitigation.request_id %>
+                      <% if mitigation.performance_time %>
+                        | <strong>Performance:</strong> <%= mitigation.performance_time %>
                       <% end %>
-                    </span>
-                    <span class="badge <%= mitigation.success? ? 'badge-yes' : 'badge-no' %>">
-                      <%= mitigation.status.titleize %>
-                    </span>
-                  </div>
-                <% end %>
-                <% if observation.mitigations.count > 3 %>
-                  <div style="font-size: 11px; color: #666; margin-top: 5px;">
-                    ... and <%= observation.mitigations.count - 3 %> more assessments
+                    </div>
+
+                    <% if mitigation.success? && mitigation.response_data.dig('data', 'result') %>
+                      <% result = mitigation.response_data.dig('data', 'result') %>
+                      
+                      <!-- Risk Assessment -->
+                      <div style="margin-bottom: 12px;">
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; font-size: 12px;">
+                          <%# if result['safe_distance'] %>
+<!--                            <div><strong>Safe Distance:</strong> <%#= result['safe_distance'] %>ft</div>-->
+                          <%# end %>
+                          <%# if result['safe_distance_base'] %>
+<!--                            <div><strong>Base Distance:</strong> <%#= result['safe_distance_base'] %>ft</div>-->
+                          <%# end %>
+                          <% if result['safe_distance_calc'] %>
+                            <div style="<%= result['safe_distance_calc'].to_i > 0 ? 'color: #dc3545; font-weight: bold;' : '' %>">
+                              <strong>Calc Distance:</strong> <%= result['safe_distance_calc'] %>ft
+                              <% if result['safe_distance_calc'].to_i > 0 %>
+                                <span style="color: #dc3545;">⚠️</span>
+                              <% end %>
+                            </div>
+                          <% end %>
+                          <% if result['distance'] %>
+                            <div><strong>Current Distance:</strong> <%= result['distance'] %>ft</div>
+                          <% end %>
+                          <% if result['safe_distance_diff'] %>
+                            <div><strong>Difference:</strong> <%= result['safe_distance_diff'] %>ft</div>
+                          <% end %>
+                          <% if result['risk_type'] %>
+                            <div><strong>Risk Type:</strong> <%= result['risk_type'].titleize %></div>
+                          <% end %>
+                          <% if result['window_type'] %>
+                            <div><strong>Window:</strong> <%= result['window_type'].titleize %></div>
+                          <% end %>
+                          <% if result['vegetation_type'] %>
+                            <div><strong>Vegetation:</strong> <%= result['vegetation_type'].titleize %></div>
+                          <% end %>
+                        </div>
+                      </div>
+
+                      <!-- Mitigation Recommendations -->
+                      <% if result['mitigations'] %>
+                        <div style="margin-top: 12px;">
+                          <strong style="font-size: 13px; color: #333;">🛡️ Recommendations:</strong>
+                          <% result['mitigations'].each do |category, recommendations| %>
+                            <div style="margin: 8px 0;">
+                              <strong style="font-size: 12px; color: #555;"><%= category.titleize %> Solutions:</strong>
+                              <ul style="margin: 4px 0 0 20px; padding: 0; font-size: 11px;">
+                                <% recommendations.each do |rec| %>
+                                  <li style="margin-bottom: 2px;"><%= rec %></li>
+                                <% end %>
+                              </ul>
+                            </div>
+                          <% end %>
+                        </div>
+                      <% end %>
+                    <% else %>
+                      <!-- Failed Assessment -->
+                      <div style="color: #721c24; font-size: 12px;">
+                        <strong>Message:</strong> <%= mitigation.response_data['message'] || 'Assessment failed' %>
+                      </div>
+                    <% end %>
+
+                    <!-- Metadata (collapsible) -->
+                    <details style="margin-top: 10px;">
+                      <summary style="font-size: 11px; color: #666; cursor: pointer;">Show Raw Data</summary>
+                      <pre style="font-size: 10px; background: #f8f9fa; padding: 8px; border-radius: 3px; margin-top: 5px; overflow-x: auto;"><%= JSON.pretty_generate(mitigation.response_data) %></pre>
+                    </details>
                   </div>
                 <% end %>
               </div>

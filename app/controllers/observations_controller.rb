@@ -1,6 +1,6 @@
 class ObservationsController < ApplicationController
   def index
-    @observations = Observation.includes(:property, :mitigations)
+    @observations = Observation.includes(:property, mitigations: [])
                               .recent
                               .page(params[:page])
                               .per(10)
