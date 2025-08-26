@@ -8,28 +8,12 @@ Rails 8 application to search properties, add/check observations against [fire r
 
 ## Quickstart
 
-### Using Docker (Recommended)
+### Using docker-compose (Recommended)
 
-The easiest way to run the application is using the pre-built Docker image:
+The easiest way to run the application is using docker-compose:
 
 ```shell
-# Pull the latest image from GitHub Container Registry
-docker pull ghcr.io/dyoun/obsv-admin:latest
-
-# start postgres database
-docker run -d --name postgres \
-  -e POSTGRES_PASSWORD=password \
-  -e POSTGRES_DB=rules_admin_production \
-  -p 5432:5432 \
-  postgres:16
-
-# start app
-docker run -d --name obsv-admin \
-  -p 3000:3000 \
-  -e DATABASE_URL=postgres://postgres:password@host.docker.internal:5432/rules_admin_production \
-  -e RAILS_ENV=development \
-  ghcr.io/dyoun/obsv-admin:latest
-
+docker-compose up
 # visit http://localhost:3000 to access the app
 ```
 
