@@ -1,6 +1,22 @@
-# Rules Engine Project - Rules Admin
+# Observation Admin
 
-A Rails 8 application for managing properties with address validation and geographic capabilities.
+[![Tests](https://github.com/dyoun/rules-engine-project/workflows/Tests/badge.svg)](https://github.com/dyoun/rules-engine-project/actions)
+[![Docker](https://github.com/dyoun/rules-engine-project/workflows/Docker/badge.svg)](https://github.com/dyoun/rules-engine-project/actions)
+
+Rails 8 application to search properties, add/check observations against [fire rules mitigation](https://github.com/dyoun/fire-rules-eng).
+
+
+## Quickstart
+Start [fire rules API service](https://github.com/dyoun/fire-rules-eng?tab=readme-ov-file#quickstart)
+
+```shell
+rails db:create
+rails db:migrate
+rails db:seed
+
+rails server
+# http://localhost:3000 to access the address lookup form.
+```
 
 ## Features
 

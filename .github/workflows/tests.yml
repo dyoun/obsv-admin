@@ -1,0 +1,52 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: rules_admin_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    env:
+      RAILS_ENV: test
+      DATABASE_URL: postgres://postgres:postgres@localhost:5432/rules_admin_test
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Ruby
+      uses: ruby/setup-ruby@v1
+      with:
+        ruby-version: 3.4.5
+        bundler-cache: true
+
+    - name: Setup database
+      run: |
+        bin/rails db:create
+        bin/rails db:migrate
+
+    - name: Run tests
+      run: bin/rails test
+
+    - name: Run security scan
+      run: bundle exec brakeman --no-pager
+
+    - name: Run linter
+      run: bundle exec rubocop
