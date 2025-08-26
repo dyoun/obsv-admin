@@ -27,10 +27,51 @@ class Mitigation < ApplicationRecord
   end
   
   def mitigation_recommendations
-    response_data.dig('data', 'result', 'mitigations')
+    # Handle both old single result and new array format
+    if response_data.dig('data', 'result').is_a?(Array)
+      response_data.dig('data', 'result')
+    else
+      response_data.dig('data', 'result', 'mitigations')
+    end
   end
   
   def safe_distance
-    response_data.dig('data', 'result', 'safe_distance')
+    # For array format, get from first result that has distance info
+    if response_data.dig('data', 'result').is_a?(Array)
+      distance_result = response_data.dig('data', 'result').find { |r| r['safe_distance'] }
+      distance_result&.dig('safe_distance')
+    else
+      response_data.dig('data', 'result', 'safe_distance')
+    end
+  end
+  
+  def safe_distance_diff
+    # For array format, get from first result that has distance info
+    if response_data.dig('data', 'result').is_a?(Array)
+      distance_result = response_data.dig('data', 'result').find { |r| r['safe_distance_diff'] }
+      distance_result&.dig('safe_distance_diff')
+    else
+      response_data.dig('data', 'result', 'safe_distance_diff')
+    end
+  end
+  
+  def current_distance
+    # For array format, get from first result that has distance info
+    if response_data.dig('data', 'result').is_a?(Array)
+      distance_result = response_data.dig('data', 'result').find { |r| r['distance'] }
+      distance_result&.dig('distance')
+    else
+      response_data.dig('data', 'result', 'distance')
+    end
+  end
+  
+  def safe_distance_calc
+    # For array format, get from first result that has distance info
+    if response_data.dig('data', 'result').is_a?(Array)
+      distance_result = response_data.dig('data', 'result').find { |r| r['safe_distance_calc'] }
+      distance_result&.dig('safe_distance_calc')
+    else
+      response_data.dig('data', 'result', 'safe_distance_calc')
+    end
   end
 end

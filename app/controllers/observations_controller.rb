@@ -42,7 +42,13 @@ class ObservationsController < ApplicationController
       property_id: @observation.property.id,
       response_data: {
         message: result.message,
-        data: result.data,
+        data: {
+          api_version: result.data['api_version'],
+          performance: result.data['performance'],
+          request_id: result.data['request_id'],
+          result: result.data['result'],
+          timestamp: result.data['timestamp']
+        },
         metadata: result.metadata
       }
     )
@@ -165,9 +171,5 @@ class ObservationsController < ApplicationController
       country: 'US',
       normalized_address: normalized_address
     }
-  end
-  
-  def extract_request_id(data)
-    data&.dig('request_id') || "req-#{Time.current.to_i}"
   end
 end
