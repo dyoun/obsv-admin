@@ -5,7 +5,7 @@ require 'timeout'
 
 module FireMitigation
   class HttpClient < BaseClient
-    DEFAULT_BASE_URL = 'http://localhost:5000'
+    DEFAULT_BASE_URL = ENV.fetch('RULES_ENGINE_URL', 'http://localhost:5000')
     DEFAULT_ENDPOINT = '/rules/latest'
     DEFAULT_TIMEOUT = 30
 
