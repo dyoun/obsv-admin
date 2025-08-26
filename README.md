@@ -25,48 +25,12 @@ docker run -d --name postgres \
 
 # start app
 docker run -d --name obsv-admin \
-  -p 3000:80 \
+  -p 3000:3000 \
   -e DATABASE_URL=postgres://postgres:password@host.docker.internal:5432/rules_admin_production \
   -e RAILS_ENV=development \
   ghcr.io/dyoun/obsv-admin:latest
 
 # visit http://localhost:3000 to access the app
-```
-
-### Using Docker Compose (Alternative)
-
-Create a `docker-compose.yml` file:
-
-```yaml
-version: '3.8'
-services:
-  db:
-    image: postgres:16
-    environment:
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: rules_admin_production
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"
-
-  web:
-    image: ghcr.io/dyoun/obsv-admin:latest
-    ports:
-      - "3000:80"
-    environment:
-      DATABASE_URL: postgres://postgres:password@db:5432/rules_admin_production
-      RAILS_ENV: development
-    depends_on:
-      - db
-
-volumes:
-  postgres_data:
-```
-
-Then run:
-```shell
-docker-compose up -d
 ```
 
 ### Local Development

@@ -1,56 +1,49 @@
-version: '3.8'
-
 services:
-  # PostgreSQL database
-  db:
-    image: postgres:16
-    environment:
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: rules_admin_production
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5433:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # Fire Rules Engine API (Flask)
   fire-rules-api:
-    image: ghcr.io/dyoun/fire-rules-eng:latest
+    image: ghcr.io/dyoun/rules-engine:latest
+    container_name: fire-rules-api
     ports:
-      - "5001:5000"
+      - "5000:5000"
     environment:
+      - PORT=5000
       - FLASK_ENV=production
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      test: ["CMD-SHELL", "curl -f http://localhost:5000/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    restart: unless-stopped
 
-  # Rails Observation Admin App
-  web:
-    image: ghcr.io/dyoun/obsv-admin:latest
+  rails-app:
+    build: .
+    container_name: obsv-admin-rails
     ports:
       - "3000:3000"
     environment:
-      DATABASE_URL: postgres://postgres:password@db:5433/rules_admin_production
-      RAILS_ENV: development
-      RULES_ENGINE_URL: http://localhost:5001
+      - RAILS_ENV=development
+      - DATABASE_URL=postgresql://postgres:password@obsv-admin-db:5432/obsv_admin_development
+      - RULES_ENGINE_URL=http://fire-rules-api:5000
     depends_on:
-      db:
-        condition: service_healthy
-      fire-rules-api:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+      - postgres
+    volumes:
+      - .:/app
+      - bundle_cache:/usr/local/bundle
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16
+    container_name: obsv-admin-db
+    environment:
+      - POSTGRES_DB=obsv_admin_development
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
 
 volumes:
   postgres_data:
+  bundle_cache:
