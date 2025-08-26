@@ -4,7 +4,7 @@ class AddressLookupController < ApplicationController
 
   def search
     address = params[:address]
-    
+
     if address.blank?
       render json: { error: "Address is required" }, status: :bad_request
       return

@@ -1,10 +1,10 @@
-require 'net/http'
-require 'json'
+require "net/http"
+require "json"
 
 module AddressValidation
   class OpenstreetmapValidator < BaseValidator
-    BASE_URL = 'https://nominatim.openstreetmap.org/search'
-    USER_AGENT = 'RulesAdminApp/1.0'
+    BASE_URL = "https://nominatim.openstreetmap.org/search"
+    USER_AGENT = "RulesAdminApp/1.0"
 
     def initialize(timeout: 10, rate_limit_delay: 1.0)
       @timeout = timeout
@@ -16,11 +16,11 @@ module AddressValidation
       return validation_result(valid: false, error_message: "Address cannot be blank") if address.blank?
 
       enforce_rate_limit
-      
+
       begin
         response = make_request(address)
         parse_response(response, address)
-      rescue Net::TimeoutError, Net::OpenTimeout
+      rescue Net::OpenTimeout, Net::ReadTimeout, Timeout::Error
         validation_result(valid: false, error_message: "Request timeout")
       rescue StandardError => e
         Rails.logger.error "OpenStreetMap validation failed: #{e.message}"
@@ -33,13 +33,13 @@ module AddressValidation
     def make_request(address)
       uri = build_uri(address)
       request = Net::HTTP::Get.new(uri)
-      request['User-Agent'] = USER_AGENT
-      
+      request["User-Agent"] = USER_AGENT
+
       http = Net::HTTP.new(uri.host, uri.port)
       http.use_ssl = true
       http.read_timeout = @timeout
       http.open_timeout = @timeout
-      
+
       @last_request_time = Time.current
       http.request(request)
     end
@@ -47,11 +47,11 @@ module AddressValidation
     def build_uri(address)
       params = {
         q: address,
-        format: 'json',
+        format: "json",
         addressdetails: 1,
         limit: 1
       }
-      
+
       query_string = URI.encode_www_form(params)
       URI("#{BASE_URL}?#{query_string}")
     end
@@ -69,10 +69,10 @@ module AddressValidation
 
     def handle_success_response(body, original_address)
       results = JSON.parse(body)
-      
+
       if results.empty?
         return validation_result(
-          valid: false, 
+          valid: false,
           error_message: "Address not found"
         )
       end
@@ -80,9 +80,9 @@ module AddressValidation
       result = results.first
       validation_result(
         valid: true,
-        latitude: result['lat'].to_f,
-        longitude: result['lon'].to_f,
-        formatted_address: result['display_name']
+        latitude: result["lat"].to_f,
+        longitude: result["lon"].to_f,
+        formatted_address: result["display_name"]
       )
     rescue JSON::ParserError
       validation_result(valid: false, error_message: "Invalid response format")

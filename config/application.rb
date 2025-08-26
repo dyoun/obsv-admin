@@ -35,10 +35,10 @@ module RulesAdmin
     #
     # config.time_zone = "Central Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
-    
+
     # Address validation configuration
     config.address_validator = :openstreetmap
-    
+
     # Fire mitigation service configuration
     config.fire_mitigation_client = :http
 

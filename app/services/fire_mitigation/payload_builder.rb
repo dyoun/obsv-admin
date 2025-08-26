@@ -22,34 +22,34 @@ module FireMitigation
 
     def build_observations_array
       observations_data = []
-      
+
       # Windows risk assessment
       if has_window_data?
         observations_data << {
-          risk_type: 'windows',
+          risk_type: "windows",
           window_type: extract_window_type,
           vegetation_type: extract_vegetation_type,
           distance: extract_distance
         }
       end
-      
+
       # Attic risk assessment
       if has_attic_data?
         observations_data << {
-          risk_type: 'attic',
+          risk_type: "attic",
           attic_vent_screens: extract_attic_vent_screens
         }
       end
-      
+
       # Roof risk assessment
       if has_roof_data?
         observations_data << {
-          risk_type: 'roof',
+          risk_type: "roof",
           roof_type: extract_roof_type,
           wild_fire_risk: extract_wildfire_risk
         }
       end
-      
+
       observations_data
     end
 
@@ -58,17 +58,17 @@ module FireMitigation
     end
 
     def extract_window_type
-      observation.observations['window_type'] || 'unknown'
+      observation.observations["window_type"] || "unknown"
     end
 
     def extract_vegetation_type
-      observation.observations['vegetation_type'] || 'unknown'
+      observation.observations["vegetation_type"] || "unknown"
     end
 
     def extract_distance
-      distance_value = observation.observations['distance_to_window']
+      distance_value = observation.observations["distance_to_window"]
       return 0 if distance_value.blank?
-      
+
       distance_value.to_f.round(1)
     end
 
@@ -78,26 +78,26 @@ module FireMitigation
 
     # Data availability checks
     def has_window_data?
-      observation.observations['window_type'].present? ||
-      observation.observations['vegetation_type'].present? ||
-      observation.observations['distance_to_window'].present?
+      observation.observations["window_type"].present? ||
+      observation.observations["vegetation_type"].present? ||
+      observation.observations["distance_to_window"].present?
     end
 
     def has_attic_data?
-      observation.observations['attic_vent_screen'].present?
+      observation.observations["attic_vent_screen"].present?
     end
 
     def has_roof_data?
-      observation.observations['roof_type'].present? ||
-      observation.observations['wildfire_risk'].present?
+      observation.observations["roof_type"].present? ||
+      observation.observations["wildfire_risk"].present?
     end
 
     # New extraction methods
     def extract_attic_vent_screens
-      case observation.observations['attic_vent_screen']
-      when 'true', true
+      case observation.observations["attic_vent_screen"]
+      when "true", true
         true
-      when 'false', false
+      when "false", false
         false
       else
         false
@@ -105,11 +105,11 @@ module FireMitigation
     end
 
     def extract_roof_type
-      observation.observations['roof_type'] || 'unknown'
+      observation.observations["roof_type"] || "unknown"
     end
 
     def extract_wildfire_risk
-      observation.observations['wildfire_risk'] || 'unknown'
+      observation.observations["wildfire_risk"] || "unknown"
     end
   end
 end

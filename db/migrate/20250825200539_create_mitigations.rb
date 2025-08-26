@@ -9,7 +9,7 @@ class CreateMitigations < ActiveRecord::Migration[8.0]
 
       t.timestamps
     end
-    
+
     add_index :mitigations, :response_data, using: :gin
     add_index :mitigations, :submitted_at
     add_index :mitigations, :status

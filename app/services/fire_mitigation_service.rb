@@ -4,7 +4,7 @@ class FireMitigationService
     client.submit_observation(observation, request_id: request_id)
   end
 
-  def self.submit_batch_observations(observations, request_prefix: 'batch', client_options: {})
+  def self.submit_batch_observations(observations, request_prefix: "batch", client_options: {})
     client = FireMitigation::ClientFactory.create(**client_options)
     client.submit_batch(observations, request_prefix: request_prefix)
   end

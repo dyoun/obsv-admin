@@ -64,13 +64,13 @@ module FireMitigation
 
     def batch_status
       if success?
-        'completed'
+        "completed"
       elsif partial_success?
-        'partial'
+        "partial"
       elsif complete_failure?
-        'failed'
+        "failed"
       else
-        'unknown'
+        "unknown"
       end
     end
   end

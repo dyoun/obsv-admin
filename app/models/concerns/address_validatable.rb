@@ -29,13 +29,13 @@ module AddressValidatable
 
   def should_validate_address?
     return false if @skip_address_validation
-    
-    street_address_changed? || city_changed? || state_province_changed? || 
+
+    street_address_changed? || city_changed? || state_province_changed? ||
     postal_code_changed? || country_changed?
   end
 
   def full_address
-    [street_address, city, state_province, postal_code, country].compact.join(", ")
+    [ street_address, city, state_province, postal_code, country ].compact.join(", ")
   end
 
   def address_validator

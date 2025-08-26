@@ -3,7 +3,7 @@ class AddressValidatorFactory
 
   def self.create(type = nil)
     validator_type = type || Rails.application.config.address_validator || DEFAULT_VALIDATOR
-    
+
     case validator_type.to_sym
     when :openstreetmap
       AddressValidation::OpenstreetmapValidator.new

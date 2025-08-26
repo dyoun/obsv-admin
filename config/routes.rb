@@ -1,13 +1,13 @@
 Rails.application.routes.draw do
-  resources :properties, only: [:index, :edit, :update]
-  resources :observations, only: [:index, :show, :new, :create] do
+  resources :properties, only: [ :index, :edit, :update ]
+  resources :observations, only: [ :index, :show, :new, :create ] do
     member do
       post :submit_to_fire_mitigation
     end
   end
   get "address_lookup/index"
   post "address_lookup/search"
-  
+
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

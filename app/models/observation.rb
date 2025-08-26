@@ -24,15 +24,15 @@ class Observation < ApplicationRecord
   def recorded_today?
     recorded_at&.to_date == Date.current
   end
-  
+
   def latest_mitigation
     @latest_mitigation ||= mitigations.recent.first
   end
-  
+
   def successful_mitigations
     mitigations.successful
   end
-  
+
   def has_successful_mitigation?
     mitigations.successful.exists?
   end
