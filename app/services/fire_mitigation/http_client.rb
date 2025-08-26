@@ -6,7 +6,7 @@ require 'timeout'
 module FireMitigation
   class HttpClient < BaseClient
     DEFAULT_BASE_URL = 'http://localhost:5000'
-    DEFAULT_ENDPOINT = '/rules/'
+    DEFAULT_ENDPOINT = '/rules/latest'
     DEFAULT_TIMEOUT = 30
 
     def initialize(base_url: DEFAULT_BASE_URL, endpoint: DEFAULT_ENDPOINT, timeout: DEFAULT_TIMEOUT)
