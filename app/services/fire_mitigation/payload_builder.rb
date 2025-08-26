@@ -11,8 +11,8 @@ module FireMitigation
 
     def build
       {
-        observations: build_observations_data,
-        request_id: build_request_id
+        observations: build_observations_array,
+        property_id: observation.property.id.to_s
       }
     end
 

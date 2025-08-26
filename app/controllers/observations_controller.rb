@@ -39,7 +39,7 @@ class ObservationsController < ApplicationController
     mitigation = @observation.mitigations.create!(
       submitted_at: Time.current,
       status: result.success? ? 'success' : 'failure',
-      request_id: extract_request_id(result.data),
+      property_id: @observation.property.id,
       response_data: {
         message: result.message,
         data: result.data,

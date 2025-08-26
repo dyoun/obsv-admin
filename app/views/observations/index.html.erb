@@ -416,7 +416,7 @@
         </div>
         
         <div class="result-message">
-          <strong>Observation #<%= latest_mitigation.observation.id %> - Request ID: <%= latest_mitigation.request_id %>:</strong>
+          <strong>Observation #<%= latest_mitigation.observation.id %> - Property ID: <%= latest_mitigation.property_id %>:</strong>
           <%= latest_mitigation.response_data['message'] %>
         </div>
         
@@ -618,7 +618,7 @@
                     <div class="assessment-details-mini" id="details-<%= observation.id %>-<%= index %>">
                       <!-- Request Info -->
                       <div style="font-size: 12px; margin-bottom: 10px; color: #666;">
-                        <strong>Request ID:</strong> <%= mitigation.request_id %>
+                        <strong>Property ID:</strong> <%= mitigation.property_id %>
                         <% if mitigation.performance_time %>
                           | <strong>Performance:</strong> <%= mitigation.performance_time %>
                         <% end %>

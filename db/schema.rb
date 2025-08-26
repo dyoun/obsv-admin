@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_08_25_200539) do
+ActiveRecord::Schema[8.0].define(version: 2025_08_26_013526) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -19,7 +19,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_08_25_200539) do
     t.jsonb "response_data"
     t.datetime "submitted_at"
     t.string "status"
-    t.string "request_id"
+    t.string "property_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["observation_id"], name: "index_mitigations_on_observation_id"

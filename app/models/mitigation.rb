@@ -3,7 +3,7 @@ class Mitigation < ApplicationRecord
   
   validates :submitted_at, presence: true
   validates :status, presence: true, inclusion: { in: %w[success failure pending] }
-  validates :request_id, presence: true, uniqueness: true
+  validates :property_id, presence: true
   validates :response_data, presence: true
   
   scope :successful, -> { where(status: 'success') }
