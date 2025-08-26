@@ -27,25 +27,11 @@ docker run -d --name postgres \
 docker run -d --name obsv-admin \
   -p 3000:80 \
   -e DATABASE_URL=postgres://postgres:password@host.docker.internal:5432/rules_admin_production \
-  -e RAILS_MASTER_KEY=your_master_key_here \
+  -e RAILS_ENV=development \
   ghcr.io/dyoun/obsv-admin:latest
 
 # visit http://localhost:3000 to access the app
 ```
-
-#### Generating a New Master Key
-
-If you don't have a master key, generate one with:
-
-```shell
-# Generate a new master key (outputs a 32-character hex string)
-openssl rand -hex 32
-
-# Or use Ruby to generate one
-ruby -e "require 'securerandom'; puts SecureRandom.hex(32)"
-```
-
-Use the generated key as your `RAILS_MASTER_KEY` environment variable.
 
 ### Using Docker Compose (Alternative)
 
@@ -70,7 +56,7 @@ services:
       - "3000:80"
     environment:
       DATABASE_URL: postgres://postgres:password@db:5432/rules_admin_production
-      RAILS_MASTER_KEY: your_master_key_here
+      RAILS_ENV: development
     depends_on:
       - db
 
