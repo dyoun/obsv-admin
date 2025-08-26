@@ -27,7 +27,7 @@ services:
     depends_on:
       - postgres
     volumes:
-      - .:/app
+      - .:/rails
       - bundle_cache:/usr/local/bundle
     restart: unless-stopped
 
