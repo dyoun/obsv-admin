@@ -365,9 +365,9 @@
           
           <% @observation.mitigations.recent.each_with_index do |mitigation, index| %>
             <% 
-              # Determine risk level based on safe_distance_calc
-              safe_distance_calc = mitigation.response_data.dig('data', 'result', 'safe_distance_calc').to_i
-              is_high_risk = safe_distance_calc > 0
+              # Determine risk level based on safe_distance_diff
+              safe_distance_diff = mitigation.response_data.dig('data', 'result', 'safe_distance_diff').to_i
+              is_high_risk = safe_distance_diff > 0
               
               if mitigation.success?
                 if is_high_risk
@@ -422,16 +422,18 @@
                   <!-- Risk Assessment -->
                   <div style="margin-bottom: 12px;">
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; font-size: 12px;">
-                      <% if result['safe_distance_calc'] %>
-                        <div style="<%= result['safe_distance_calc'].to_i > 0 ? 'color: #dc3545; font-weight: bold;' : '' %>">
-                          <strong>Calc Distance:</strong> <%= result['safe_distance_calc'] %>ft
-                          <% if result['safe_distance_calc'].to_i > 0 %>
+                      <% if result['distance'] %>
+                        <div>
+                          <strong>Current Distance:</strong> <%= result['distance'] %>ft
+                          <% if safe_distance_diff > 0 %>
                             <span style="color: #dc3545;">⚠️</span>
                           <% end %>
                         </div>
                       <% end %>
-                      <% if result['distance'] %>
-                        <div><strong>Current Distance:</strong> <%= result['distance'] %>ft</div>
+                      <% if result['safe_distance_calc'] %>
+                        <div style="<%= safe_distance_diff > 0 ? 'color: #dc3545; font-weight: bold;' : '' %>">
+                          <strong>Safe Distance:</strong> <%= result['safe_distance_calc'] %>ft
+                        </div>
                       <% end %>
                       <% if result['safe_distance_diff'] %>
                         <div><strong>Difference:</strong> <%= result['safe_distance_diff'] %>ft</div>
