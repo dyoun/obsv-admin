@@ -7,6 +7,84 @@ Rails 8 application to search properties, add/check observations against [fire r
 
 
 ## Quickstart
+
+### Using Docker (Recommended)
+
+The easiest way to run the application is using the pre-built Docker image:
+
+```shell
+# Pull the latest image from GitHub Container Registry
+docker pull ghcr.io/dyoun/obsv-admin:latest
+
+# start postgres database
+docker run -d --name postgres \
+  -e POSTGRES_PASSWORD=password \
+  -e POSTGRES_DB=rules_admin_production \
+  -p 5432:5432 \
+  postgres:16
+
+# start app
+docker run -d --name obsv-admin \
+  -p 3000:80 \
+  -e DATABASE_URL=postgres://postgres:password@host.docker.internal:5432/rules_admin_production \
+  -e RAILS_MASTER_KEY=your_master_key_here \
+  ghcr.io/dyoun/obsv-admin:latest
+
+# visit http://localhost:3000 to access the app
+```
+
+#### Generating a New Master Key
+
+If you don't have a master key, generate one with:
+
+```shell
+# Generate a new master key (outputs a 32-character hex string)
+openssl rand -hex 32
+
+# Or use Ruby to generate one
+ruby -e "require 'securerandom'; puts SecureRandom.hex(32)"
+```
+
+Use the generated key as your `RAILS_MASTER_KEY` environment variable.
+
+### Using Docker Compose (Alternative)
+
+Create a `docker-compose.yml` file:
+
+```yaml
+version: '3.8'
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: rules_admin_production
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  web:
+    image: ghcr.io/dyoun/obsv-admin:latest
+    ports:
+      - "3000:80"
+    environment:
+      DATABASE_URL: postgres://postgres:password@db:5432/rules_admin_production
+      RAILS_MASTER_KEY: your_master_key_here
+    depends_on:
+      - db
+
+volumes:
+  postgres_data:
+```
+
+Then run:
+```shell
+docker-compose up -d
+```
+
+### Local Development
+
 Start [fire rules API service](https://github.com/dyoun/fire-rules-eng?tab=readme-ov-file#quickstart)
 
 ```shell
