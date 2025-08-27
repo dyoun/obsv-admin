@@ -34,6 +34,71 @@ rails server
 # http://localhost:3000 to access the address lookup form.
 ```
 
+## Architecture Diagram
+```mermaid
+graph TD
+%% Main Systems
+RA[Rules Admin<br/>GoRules BRMS UI]
+OA[Obsv Admin<br/>Rails 8 App]
+FRE[Fire Rules Engine<br/>API Service]
+
+    %% Data Models
+    P[Property]
+    O[Observation]
+    M[Mitigation]
+    
+    %% Services
+    FMS[Fire Mitigation Service]
+    HC[HTTP Client]
+    
+    %% External APIs
+    OSM[OpenStreetMap API<br/>Address Validation]
+    
+    %% Rules Admin -> Fire Rules Engine
+    RA -->|Deploy/Manage Rules| FRE
+    RA -->|Upload fire_risk.json| FRE
+    RA -->|Test Rules| FRE
+    
+    %% Obsv Admin Internal Flow
+    OA --> P
+    P --> O
+    O --> M
+    
+    %% Address Validation
+    P -->|Validate Address| OSM
+    OSM -->|Return Coordinates| P
+    
+    %% Fire Mitigation Flow
+    O -->|Submit for Analysis| FMS
+    FMS --> HC
+    HC -->|HTTP POST /rules/latest| FRE
+    FRE -->|Risk Assessment Response| HC
+    HC --> FMS
+    FMS -->|Store Results| M
+    
+    %% Docker Network Communication
+    subgraph "Docker Network"
+        OA
+        FRE
+        DB[(PostgreSQL)]
+        OA --> DB
+    end
+    
+    %% Environment Variables
+    OA -.->|RULES_ENGINE_URL<br/>http://fire-rules-api:5000| FRE
+    
+    %% Styling
+    classDef system fill:#e1f5fe
+    classDef model fill:#f3e5f5
+    classDef service fill:#fff3e0
+    classDef external fill:#e8f5e8
+    
+    class RA,OA,FRE system
+    class P,O,M model
+    class FMS,HC service
+    class OSM,DB external
+```
+
 ## Features
 
 ### Property Management
