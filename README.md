@@ -17,7 +17,7 @@ docker-compose up
 # visit http://localhost:3000 to access the app
 ```
 
-![Observations Admin](public/observation-admin.png)
+![Observations Admin](public/obsv-admin.png)
 
 Rules admin can be started with these [instructions](https://github.com/dyoun/rules-admin)
 
