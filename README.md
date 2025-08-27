@@ -1,7 +1,7 @@
 # Observation Admin
 
-[![Tests](https://github.com/dyoun/rules-engine-project/workflows/Tests/badge.svg)](https://github.com/dyoun/rules-engine-project/actions)
-[![Docker](https://github.com/dyoun/rules-engine-project/workflows/Docker/badge.svg)](https://github.com/dyoun/rules-engine-project/actions)
+[![Tests](https://github.com/dyoun/obsv-admin/workflows/Tests/badge.svg)](https://github.com/dyoun/obsv-admin/actions)
+[![Docker](https://github.com/dyoun/obsv-admin/workflows/Docker/badge.svg)](https://github.com/dyoun/obsv-admin/actions)
 
 Rails 8 application to search properties, add/check observations against [fire rules mitigation](https://github.com/dyoun/fire-rules-eng).
 
