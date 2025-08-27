@@ -10,12 +10,16 @@ Rails 8 application to search properties, add/check observations against [fire r
 
 ### Using docker-compose (Recommended)
 
-The easiest way to run the application is using docker-compose:
+The easiest way to run Observations Admin is using docker-compose:
 
 ```shell
 docker-compose up
 # visit http://localhost:3000 to access the app
 ```
+
+![Observations Admin](public/observation-admin.png)
+
+Rules admin can be started with these [instructions](https://github.com/dyoun/rules-admin)
 
 ### Local Development
 
