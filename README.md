@@ -5,6 +5,35 @@
 
 Rails 8 application to search properties, add/check observations against [fire rules mitigation](https://github.com/dyoun/fire-rules-eng).
 
+## Background
+Ruby on Rails was chosen for the observations admin as it provides a great framework to prototype/iterate applications quickly.
+The philosophy of "convention over configuration" provides a clear path of how things should be done, easing future
+development; CLI to modify Models, create DB migrations, etc. Rails also has an extensive library of components to avoid reinventing the wheel. 
+
+## Basic Features
+* Address lookup/normalization from [OpenStreetMaps](https://nominatim.openstreetmap.org/ui/search.html)
+* Observations added to property
+* Fire risk computed against fire-rules-eng service
+  * Rules are defined in [rules-admin](https://github.com/dyoun/rules-admin)
+* Mitigations are associated with an observation and displayed in a user friendly way
+* Rules Admin
+  * Fully featured UI to manage, create, edit, version, rules
+    * https://docs.gorules.io/docs/user-manual
+    * https://docs.gorules.io/docs/user-quickstart
+  * Reasonable pricing
+    * https://gorules.io/pricing
+
+## Future Enhancements
+* Observations
+  * Edit observations
+  * Allow API version selection
+* Properties
+  * Search by address/Geo coordinates
+* Authentication, Authorization, Audits
+* Admin Interface for superusers
+* Refactor [fire-rules-eng](https://github.com/dyoun/fire-rules-eng) for clarity
+
+## Functionality
 
 ## Quickstart
 
@@ -123,29 +152,79 @@ FRE[Fire Rules Engine<br/>API Service]
 ### Address Validation System
 The application includes a robust address validation system built with SOLID principles and enterprise design patterns:
 
-#### Components
+## Architecture
+
+### Components
 - **Property Model** - Main domain model with validations and business logic
 - **AddressValidatable Concern** - Single responsibility module for address validation logic
 - **Address Validation Services** - Strategy and Factory pattern implementation:
-  - `BaseValidator` - Abstract base class (Open/Closed principle)
-  - `OpenstreetmapValidator` - OpenStreetMap API integration with rate limiting
-  - `NullValidator` - No-op validator for testing/development environments
-  - `ValidationResult` - Value object for validation results
-  - `AddressValidatorFactory` - Factory pattern for validator selection
+    - `BaseValidator` - Abstract base class (Open/Closed principle)
+    - `OpenstreetmapValidator` - OpenStreetMap API integration with rate limiting
+    - `NullValidator` - No-op validator for testing/development environments
+    - `ValidationResult` - Value object for validation results
+    - `AddressValidatorFactory` - Factory pattern for validator selection
 
-#### SOLID Principles Applied
+### SOLID Principles Applied
 - **Single Responsibility**: Each class has one reason to change
 - **Open/Closed**: Easy to add new validators without modifying existing code
 - **Liskov Substitution**: All validators implement the same interface
 - **Interface Segregation**: Clean, focused interfaces
 - **Dependency Inversion**: Property model depends on abstractions, not concrete implementations
 
-#### Address Validation Features
+### Address Validation Features
 - **OpenStreetMap Integration**: Validates addresses against OpenStreetMap's Nominatim API
 - **Rate Limiting**: Built-in rate limiting to respect API guidelines
 - **Error Handling**: Comprehensive error handling for network issues and invalid responses
 - **Geocoding**: Automatic coordinate extraction and normalization
 - **Configurable**: Easy to switch between validators or disable for testing
+
+### Design Patterns
+
+The address validation system follows enterprise patterns:
+
+1. **Strategy Pattern**: Different validation strategies (OpenStreetMap, Null, etc.)
+2. **Factory Pattern**: `AddressValidatorFactory` creates appropriate validator instances
+3. **Dependency Injection**: Models depend on interfaces, not concrete classes
+4. **Concern Pattern**: `AddressValidatable` encapsulates validation logic
+5. **Value Objects**: `ValidationResult` encapsulates validation outcomes
+
+This architecture makes the system:
+- **Testable**: Easy to mock and stub external dependencies
+- **Extensible**: New validators can be added without changing existing code
+- **Maintainable**: Clear separation of concerns and single responsibilities
+- **Configurable**: Runtime selection of validation strategies
+
+## Services
+
+- **Address Validation**: OpenStreetMap Nominatim API integration
+- **Geocoding**: Automatic coordinate extraction and storage
+- **Geographic Search**: PostGIS-ready coordinate indexing
+- **Address Lookup Web Interface**: Interactive form for real-time address validation
+- **Fire Mitigation Service**: Computes mitigations against provided observations to a rules engine service
+
+## Models
+
+### Property
+- Core property management with address validation
+- Geographic capabilities and distance calculations
+- Relationship with observations for data collection
+
+### Observation
+- Flexible JSON-based data storage for custom forms
+- Property relationship for organized data collection
+- Timestamped entries with notes and custom fields
+- Scopes for querying by date ranges and types
+
+## Testing
+
+The application includes comprehensive tests covering:
+- Property model validations and business logic
+- Address validation services with HTTP mocking
+- Geographic calculations and distance measurements
+- Error handling and edge cases
+- Factory and strategy pattern implementations
+
+Run tests with: `rails test`
 
 ## Setup
 
@@ -269,50 +348,3 @@ observation.set_custom_field("pressure", 1013.25)
 recent_observations = property.observations.recent
 environmental_checks = Observation.recorded_between(1.week.ago, Time.current)
 ```
-
-## Architecture
-
-The address validation system follows enterprise patterns:
-
-1. **Strategy Pattern**: Different validation strategies (OpenStreetMap, Null, etc.)
-2. **Factory Pattern**: `AddressValidatorFactory` creates appropriate validator instances
-3. **Dependency Injection**: Models depend on interfaces, not concrete classes
-4. **Concern Pattern**: `AddressValidatable` encapsulates validation logic
-5. **Value Objects**: `ValidationResult` encapsulates validation outcomes
-
-This architecture makes the system:
-- **Testable**: Easy to mock and stub external dependencies
-- **Extensible**: New validators can be added without changing existing code
-- **Maintainable**: Clear separation of concerns and single responsibilities
-- **Configurable**: Runtime selection of validation strategies
-
-## Services
-
-- **Address Validation**: OpenStreetMap Nominatim API integration
-- **Geocoding**: Automatic coordinate extraction and storage
-- **Geographic Search**: PostGIS-ready coordinate indexing
-- **Address Lookup Web Interface**: Interactive form for real-time address validation
-
-## Models
-
-### Property
-- Core property management with address validation
-- Geographic capabilities and distance calculations
-- Relationship with observations for data collection
-
-### Observation
-- Flexible JSON-based data storage for custom forms
-- Property relationship for organized data collection
-- Timestamped entries with notes and custom fields
-- Scopes for querying by date ranges and types
-
-## Testing
-
-The application includes comprehensive tests covering:
-- Property model validations and business logic
-- Address validation services with HTTP mocking
-- Geographic calculations and distance measurements
-- Error handling and edge cases
-- Factory and strategy pattern implementations
-
-Run tests with: `rails test`
